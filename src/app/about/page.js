@@ -176,7 +176,7 @@ export default function AboutPage() {
               rel="noopener noreferrer" 
               className="map-btn"
             >
-              Open in Google Map
+              Open in Google Maps
             </a>
           </div>
                       <div className="map-frame">
