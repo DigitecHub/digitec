@@ -1,12 +1,13 @@
 "use client";
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { FaGoogle, FaEnvelope, FaLock, FaArrowLeft } from 'react-icons/fa';
 import '../../../styles/Auth.css';
 
-export default function SignIn() {
+// Component to handle redirect parameters
+function SignInContent() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -161,5 +162,27 @@ export default function SignIn() {
         <div className="auth-shape shape-3"></div>
       </div>
     </div>
+  );
+}
+
+// Loading fallback for Suspense
+function SignInLoading() {
+  return (
+    <div className="auth-container">
+      <div className="auth-card">
+        <div className="auth-header">
+          <h1>Sign In</h1>
+          <p>Loading...</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default function SignIn() {
+  return (
+    <Suspense fallback={<SignInLoading />}>
+      <SignInContent />
+    </Suspense>
   );
 }
