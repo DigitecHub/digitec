@@ -1,0 +1,253 @@
+/* LessonProgress.css */
+.lesson-progress-container {
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  padding: 20px;
+  margin: 20px 0;
+}
+
+.progress-bar-container {
+  margin-bottom: 20px;
+}
+
+.progress-bar {
+  height: 10px;
+  background-color: #e9ecef;
+  border-radius: 5px;
+  overflow: hidden;
+  position: relative;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #4a6cf7 0%, #6a8eff 100%);
+  border-radius: 5px;
+  transition: width 0.5s ease;
+}
+
+.progress-percentage {
+  text-align: right;
+  font-size: 14px;
+  color: #6c757d;
+  margin-top: 5px;
+}
+
+.lesson-actions {
+  display: flex;
+  justify-content: center;
+  margin: 20px 0;
+}
+
+.start-lesson-btn,
+.complete-lesson-btn,
+.submit-quiz-btn,
+.retake-quiz-btn,
+.next-lesson-btn {
+  padding: 10px 20px;
+  border-radius: 5px;
+  border: none;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.start-lesson-btn {
+  background-color: #4a6cf7;
+  color: white;
+}
+
+.complete-lesson-btn {
+  background-color: #28a745;
+  color: white;
+}
+
+.submit-quiz-btn {
+  background-color: #4a6cf7;
+  color: white;
+}
+
+.submit-quiz-btn:disabled {
+  background-color: #a0aec0;
+  cursor: not-allowed;
+}
+
+.retake-quiz-btn {
+  background-color: #f59e0b;
+  color: white;
+}
+
+.next-lesson-btn {
+  background-color: #4a6cf7;
+  color: white;
+}
+
+.start-lesson-btn:hover,
+.complete-lesson-btn:hover,
+.submit-quiz-btn:hover:not(:disabled),
+.retake-quiz-btn:hover,
+.next-lesson-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.lesson-quiz {
+  margin-top: 30px;
+}
+
+.quiz-instructions {
+  color: #6c757d;
+  margin-bottom: 20px;
+  font-size: 15px;
+}
+
+.quiz-questions {
+  display: flex;
+  flex-direction: column;
+  gap: 25px;
+}
+
+.quiz-question {
+  border: 1px solid #e9ecef;
+  border-radius: 8px;
+  padding: 15px;
+}
+
+.quiz-question h4 {
+  margin-top: 0;
+  color: #343a40;
+  font-size: 16px;
+}
+
+.quiz-options {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 15px;
+}
+
+.quiz-option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.quiz-option input[type="radio"] {
+  accent-color: #4a6cf7;
+  width: 18px;
+  height: 18px;
+}
+
+.quiz-option label {
+  font-size: 15px;
+  color: #495057;
+  cursor: pointer;
+}
+
+.quiz-actions {
+  margin-top: 30px;
+  display: flex;
+  justify-content: center;
+}
+
+.quiz-results {
+  text-align: center;
+  padding: 20px;
+  border-radius: 8px;
+  margin-top: 20px;
+}
+
+.quiz-results.passed {
+  background-color: rgba(40, 167, 69, 0.1);
+  border: 1px solid rgba(40, 167, 69, 0.2);
+}
+
+.quiz-results.failed {
+  background-color: rgba(245, 158, 11, 0.1);
+  border: 1px solid rgba(245, 158, 11, 0.2);
+}
+
+.quiz-score {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 20px 0;
+}
+
+.score-circle {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  font-weight: bold;
+  margin-bottom: 15px;
+}
+
+.passed .score-circle {
+  background-color: rgba(40, 167, 69, 0.2);
+  color: #28a745;
+  border: 2px solid #28a745;
+}
+
+.failed .score-circle {
+  background-color: rgba(245, 158, 11, 0.2);
+  color: #f59e0b;
+  border: 2px solid #f59e0b;
+}
+
+.score-text {
+  font-size: 16px;
+  max-width: 300px;
+}
+
+.course-complete-message {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  color: #28a745;
+}
+
+.complete-icon {
+  font-size: 24px;
+}
+
+.spinner {
+  animation: spin 1s linear infinite;
+}
+
+.lesson-progress-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 20px;
+}
+
+.lesson-progress-error {
+  color: #dc3545;
+  padding: 15px;
+  border: 1px solid #dc3545;
+  border-radius: 5px;
+  background-color: rgba(220, 53, 69, 0.1);
+}
+
+.enrollment-info-box {
+  background-color: #f8f9fa;
+  border-left: 4px solid #4a6cf7;
+  padding: 15px;
+  margin-bottom: 20px;
+  border-radius: 0 5px 5px 0;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+} 

@@ -1,0 +1,6 @@
+<svg width="120" height="60" xmlns="http://www.w3.org/2000/svg">
+  <rect width="120" height="60" fill="none"/>
+  <text x="60" y="40" font-family="Arial" font-size="14" font-weight="bold" text-anchor="middle" fill="#333">ConstructPro</text>
+  <path d="M40,15 L80,15 L60,30 Z" fill="#FFD600"/>
+  <rect x="55" y="15" width="10" height="10" fill="#fff"/>
+</svg> 

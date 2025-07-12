@@ -1,0 +1,259 @@
+/* Success Stories Section Styles */
+.success-stories-section {
+  padding: 100px 0;
+  background-color: #fff;
+  position: relative;
+  overflow: hidden;
+}
+
+.section-subtitle {
+  display: inline-block;
+  font-size: 16px;
+  font-weight: 600;
+  color: #FFD600;
+  margin-bottom: 16px;
+  letter-spacing: 1px;
+  position: relative;
+  padding-left: 30px;
+}
+
+.section-subtitle:before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  width: 20px;
+  height: 2px;
+  background-color: #FFD600;
+  transform: translateY(-50%);
+}
+
+.section-title {
+  font-size: 36px;
+  font-weight: 700;
+  line-height: 1.3;
+  margin-bottom: 24px;
+  color: #212529;
+}
+
+.section-description {
+  font-size: 16px;
+  line-height: 1.7;
+  color: #6c757d;
+  max-width: 800px;
+  margin: 0 auto 20px;
+}
+
+/* Testimonials Slider */
+.testimonials-slider {
+  position: relative;
+  background-color: #f8f9fa;
+  border-radius: 16px;
+  padding: 40px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+}
+
+.testimonial-container {
+  position: relative;
+  min-height: 300px;
+}
+
+.testimonial-item {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.5s ease;
+  transform: translateX(50px);
+}
+
+.testimonial-item.active {
+  opacity: 1;
+  visibility: visible;
+  transform: translateX(0);
+}
+
+.testimonial-content {
+  position: relative;
+}
+
+.testimonial-quote {
+  margin-bottom: 20px;
+}
+
+.testimonial-text {
+  font-size: 18px;
+  line-height: 1.7;
+  color: #495057;
+  margin-bottom: 30px;
+  font-style: italic;
+}
+
+.testimonial-author {
+  display: flex;
+  align-items: center;
+}
+
+.author-image {
+  margin-right: 20px;
+}
+
+.author-image img {
+  border: 3px solid #FFD600;
+}
+
+.author-info h4 {
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 5px;
+  color: #212529;
+}
+
+.author-info p {
+  font-size: 14px;
+  color: #6c757d;
+  margin-bottom: 0;
+}
+
+/* Testimonial Controls */
+.testimonial-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 30px;
+}
+
+.testimonial-control {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: #fff;
+  border: 1px solid #dee2e6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.testimonial-control:hover {
+  background-color: #FFD600;
+  border-color: #FFD600;
+}
+
+.testimonial-indicators {
+  display: flex;
+  align-items: center;
+  margin: 0 15px;
+}
+
+.testimonial-indicator {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background-color: #dee2e6;
+  margin: 0 5px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.testimonial-indicator.active {
+  background-color: #FFD600;
+  width: 14px;
+  height: 14px;
+}
+
+/* Clients Section */
+.clients-container {
+  margin-top: 30px;
+  text-align: center;
+}
+
+.clients-title {
+  font-size: 20px;
+  font-weight: 600;
+  margin-bottom: 30px;
+  color: #212529;
+}
+
+.clients-logos {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 40px;
+}
+
+.client-logo {
+  opacity: 0.7;
+  transition: all 0.3s ease;
+  filter: grayscale(100%);
+}
+
+.client-logo:hover {
+  opacity: 1;
+  filter: grayscale(0%);
+  transform: scale(1.05);
+}
+
+/* Responsive Styles */
+@media (max-width: 991.98px) {
+  .success-stories-section {
+    padding: 80px 0;
+  }
+  
+  .section-title {
+    font-size: 30px;
+  }
+  
+  .testimonials-slider {
+    padding: 30px;
+  }
+  
+  .testimonial-text {
+    font-size: 16px;
+  }
+}
+
+@media (max-width: 767.98px) {
+  .success-stories-section {
+    padding: 60px 0;
+  }
+  
+  .section-title {
+    font-size: 26px;
+  }
+  
+  .section-subtitle {
+    padding-left: 0;
+  }
+  
+  .section-subtitle:before {
+    display: none;
+  }
+  
+  .testimonials-slider {
+    padding: 20px;
+  }
+  
+  .testimonial-container {
+    min-height: 350px;
+  }
+  
+  .testimonial-author {
+    flex-direction: column;
+    text-align: center;
+  }
+  
+  .author-image {
+    margin-right: 0;
+    margin-bottom: 15px;
+  }
+  
+  .clients-logos {
+    gap: 20px;
+  }
+} 

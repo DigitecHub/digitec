@@ -1,0 +1,6 @@
+<svg width="120" height="60" xmlns="http://www.w3.org/2000/svg">
+  <rect width="120" height="60" fill="none"/>
+  <text x="60" y="40" font-family="Arial" font-size="14" font-weight="bold" text-anchor="middle" fill="#333">MediHealth</text>
+  <circle cx="60" cy="20" r="12" fill="#FFD600"/>
+  <path d="M55,20 L65,20 M60,15 L60,25" stroke="#fff" stroke-width="3"/>
+</svg> 
