@@ -27,109 +27,64 @@ const LessonProgress = ({
   const router = useRouter();
   const supabase = createClientComponentClient();
 
-  // Sample quiz questions - in a real app, these would come from the database
-  const sampleQuestions = [
-    {
-      id: 1,
-      question: "What is the main purpose of this lesson?",
-      options: [
-        "To entertain the user",
-        "To teach the core concepts of the subject",
-        "To provide background information only",
-        "None of the above"
-      ],
-      correctAnswer: 1 // Index of the correct answer (0-based)
-    },
-    {
-      id: 2,
-      question: "Which of the following best describes the content covered?",
-      options: [
-        "Advanced techniques only",
-        "Theoretical concepts without practical applications",
-        "Fundamental principles with practical examples",
-        "Historical background of the subject"
-      ],
-      correctAnswer: 2
-    },
-    {
-      id: 3,
-      question: "What should you do after completing this lesson?",
-      options: [
-        "Immediately move to the next lesson without review",
-        "Practice the concepts learned and review materials",
-        "Skip the quiz section",
-        "Ignore the practical examples"
-      ],
-      correctAnswer: 1
-    }
-  ];
-
   useEffect(() => {
-    async function fetchProgress() {
+    async function fetchLessonData() {
+      if (!lessonId) return;
+      setLoading(true);
       try {
-        const { data: { user }, error: userError } = await supabase.auth.getUser();
-        if (userError) throw userError;
-        
+        const { data: { user } } = await supabase.auth.getUser();
         if (!user) {
           setError("You must be logged in to track progress");
           setLoading(false);
           return;
         }
-        
-        // Check if progress record exists
+
+        // Fetch lesson progress
         const { data: progressData, error: progressError } = await supabase
           .from('lesson_progress')
-          .select('*')
+          .select('status, progress_percentage')
           .eq('user_id', user.id)
           .eq('lesson_id', lessonId)
           .single();
-          
-        if (progressError && progressError.code !== 'PGRST116') {
-          throw progressError;
-        }
-        
+
+        if (progressError && progressError.code !== 'PGRST116') throw progressError;
+
         if (progressData) {
-          setProgress(progressData.progress_percentage);
           setStatus(progressData.status);
-          setQuizCompleted(progressData.progress_percentage === 100);
-          setQuizPassed(progressData.progress_percentage >= 70);
-        } else {
-          // Create new progress record
-          const { error: insertError } = await supabase
-            .from('lesson_progress')
-            .insert({
-              user_id: user.id,
-              lesson_id: lessonId,
-              sub_course_id: subCourseId,
-              course_id: courseId,
-              progress_percentage: 0,
-              status: 'not_started'
-            });
-            
-          if (insertError) throw insertError;
+          setProgress(progressData.progress_percentage);
+          if (progressData.status === 'completed') {
+            setQuizCompleted(true);
+            setQuizPassed(true);
+            setQuizScore(progressData.progress_percentage);
+          }
         }
 
-        // Load quiz questions (in a real app, fetch from database)
-        setQuizQuestions(sampleQuestions);
-        
-      } catch (error) {
-        console.error('Error fetching progress:', error);
-        setError(error.message);
+        // Fetch sample questions for the quiz
+        const { data: questionsData, error: questionsError } = await supabase
+          .from('sample_questions')
+          .select('id, question_text, options, correct_answer')
+          .eq('lesson_id', lessonId);
+
+        if (questionsError) throw questionsError;
+        setQuizQuestions(questionsData || []);
+
+      } catch (err) {
+        setError(err.message);
+        console.error('Error fetching lesson data:', err);
       } finally {
         setLoading(false);
       }
     }
-    
-    fetchProgress();
-  }, [lessonId, subCourseId, courseId, supabase]);
+
+    fetchLessonData();
+  }, [lessonId, supabase]);
 
   const updateProgress = async (newProgress, newStatus) => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      
       if (!user) return;
-      
-      const { error } = await supabase
+
+      const { data, error } = await supabase
         .from('lesson_progress')
         .update({
           progress_percentage: newProgress,
@@ -138,125 +93,56 @@ const LessonProgress = ({
         })
         .eq('user_id', user.id)
         .eq('lesson_id', lessonId);
-        
+
       if (error) throw error;
-      
+
       setProgress(newProgress);
       setStatus(newStatus);
-      
-      // If progress is 100%, update the sub-course enrollment status
-      if (newProgress === 100) {
-        await updateSubCourseProgress();
+
+      if (newStatus === 'completed') {
+        // Optionally trigger a parent component update
       }
-      
-    } catch (error) {
-      console.error('Error updating progress:', error);
+    } catch (err) {
+      console.error('Error updating progress:', err);
+      setError('Failed to update progress.');
     }
   };
 
-  const updateSubCourseProgress = async () => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      if (!user) return;
-      
-      // Get all lessons for this sub-course
-      const { data: lessons, error: lessonsError } = await supabase
-        .from('lessons')
-        .select('id')
-        .eq('sub_course_id', subCourseId);
-        
-      if (lessonsError) throw lessonsError;
-      
-      // Get progress for all lessons in this sub-course
-      const { data: lessonsProgress, error: progressError } = await supabase
-        .from('lesson_progress')
-        .select('*')
-        .eq('user_id', user.id)
-        .eq('sub_course_id', subCourseId);
-        
-      if (progressError) throw progressError;
-      
-      // Check if all lessons are completed
-      const allLessonsCompleted = lessons.length > 0 && 
-        lessonsProgress.length === lessons.length &&
-        lessonsProgress.every(progress => progress.status === 'completed');
-      
-      if (allLessonsCompleted) {
-        // Update sub-course enrollment status
-        const { error: updateError } = await supabase
-          .from('sub_course_enrollments')
-          .update({ status: 'completed' })
-          .eq('user_id', user.id)
-          .eq('sub_course_id', subCourseId);
-          
-        if (updateError) throw updateError;
-      }
-      
-    } catch (error) {
-      console.error('Error updating sub-course progress:', error);
-    }
-  };
-
-  const startLesson = async () => {
-    await updateProgress(10, 'in_progress');
-  };
-
-  const markAsInProgress = async () => {
-    if (status === 'not_started') {
-      await startLesson();
-    }
-  };
-
-  const completeLesson = async () => {
-    setShowQuiz(true);
-    await updateProgress(50, 'in_progress');
-  };
-
-  const handleAnswerSelect = (questionId, optionIndex) => {
-    setUserAnswers(prev => ({
-      ...prev,
-      [questionId]: optionIndex
-    }));
+  const handleAnswerSelect = (questionId, answer) => {
+    setUserAnswers(prev => ({ ...prev, [questionId]: answer }));
   };
 
   const submitQuiz = async () => {
     setSubmitting(true);
     
-    try {
-      // Calculate score
-      let correctAnswers = 0;
-      
-      quizQuestions.forEach(question => {
-        if (userAnswers[question.id] === question.correctAnswer) {
-          correctAnswers++;
-        }
-      });
-      
-      const score = (correctAnswers / quizQuestions.length) * 100;
-      setQuizScore(score);
-      setQuizCompleted(true);
-      
-      // Check if passed (70% or higher)
-      const passed = score >= 70;
-      setQuizPassed(passed);
-      
-      // Update progress
-      await updateProgress(
-        passed ? 100 : 50,
-        passed ? 'completed' : 'in_progress'
-      );
-      
-    } catch (error) {
-      console.error('Error submitting quiz:', error);
-    } finally {
-      setSubmitting(false);
-    }
+    let correctAnswers = 0;
+    quizQuestions.forEach(q => {
+      if (userAnswers[q.id] === q.correct_answer) {
+        correctAnswers++;
+      }
+    });
+    
+    const score = quizQuestions.length > 0 ? (correctAnswers / quizQuestions.length) * 100 : 0;
+    setQuizScore(score);
+    setQuizCompleted(true);
+    
+    const passed = score >= 70;
+    setQuizPassed(passed);
+    
+    await updateProgress(
+      score,
+      passed ? 'completed' : 'in_progress'
+    );
+    
+    setSubmitting(false);
   };
 
   const retakeQuiz = () => {
     setQuizCompleted(false);
     setUserAnswers({});
+    setQuizScore(0);
+    setQuizPassed(false);
+    setShowQuiz(true);
   };
 
   const goToNextLesson = () => {
@@ -269,87 +155,68 @@ const LessonProgress = ({
     return (
       <div className="lesson-progress-loading">
         <FaSpinner className="spinner" />
-        <p>Loading progress...</p>
+        <p>Loading Lesson...</p>
       </div>
     );
   }
 
   if (error) {
-    return (
-      <div className="lesson-progress-error">
-        <p>{error}</p>
-      </div>
-    );
+    return <div className="lesson-progress-error"><p>{error}</p></div>;
   }
 
   return (
     <div className="lesson-progress-container">
-      <div className="progress-bar-container">
-        <div className="progress-bar">
-          <div 
-            className="progress-fill" 
-            style={{ width: `${progress}%` }}
-          ></div>
-        </div>
-        <div className="progress-percentage">{Math.round(progress)}% Complete</div>
-      </div>
-      
-      {!showQuiz && status !== 'completed' && (
-        <div className="lesson-actions">
-          {status === 'not_started' ? (
-            <button className="start-lesson-btn" onClick={startLesson}>
-              Start Lesson
-            </button>
+      {status !== 'completed' && !showQuiz && (
+        <button className="complete-lesson-btn" onClick={() => setShowQuiz(true)}>
+          Take Quiz to Complete Lesson
+        </button>
+      )}
+
+      {showQuiz && !quizCompleted && (
+        <div className="lesson-quiz">
+          <h3>Lesson Quiz</h3>
+          {quizQuestions.length > 0 ? (
+            <div className="quiz-questions">
+              {quizQuestions.map((q, qIndex) => (
+                <div key={q.id} className="quiz-question">
+                  <h4>Question {qIndex + 1}: {q.question_text}</h4>
+                  <div className="quiz-options">
+                    {q.options.map((option, oIndex) => (
+                      <div key={oIndex} className="quiz-option">
+                        <input
+                          type="radio"
+                          id={`q${q.id}-o${oIndex}`}
+                          name={`question-${q.id}`}
+                          value={option}
+                          checked={userAnswers[q.id] === option}
+                          onChange={() => handleAnswerSelect(q.id, option)}
+                        />
+                        <label htmlFor={`q${q.id}-o${oIndex}`}>{option}</label>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
           ) : (
-            <button className="complete-lesson-btn" onClick={completeLesson}>
-              Complete & Take Quiz
-            </button>
+            <p>No quiz questions available for this lesson.</p>
+          )}
+          
+          {quizQuestions.length > 0 && (
+            <div className="quiz-actions">
+              <button 
+                className="submit-quiz-btn"
+                onClick={submitQuiz}
+                disabled={submitting || Object.keys(userAnswers).length !== quizQuestions.length}
+              >
+                {submitting ? <FaSpinner className="spinner" /> : 'Submit Quiz'}
+              </button>
+            </div>
           )}
         </div>
       )}
       
-      {showQuiz && !quizCompleted && (
-        <div className="lesson-quiz">
-          <h3>Lesson Quiz</h3>
-          <p className="quiz-instructions">
-            Complete the quiz below to test your understanding. You need 70% to pass.
-          </p>
-          
-          <div className="quiz-questions">
-            {quizQuestions.map((question, qIndex) => (
-              <div key={question.id} className="quiz-question">
-                <h4>Question {qIndex + 1}: {question.question}</h4>
-                <div className="quiz-options">
-                  {question.options.map((option, oIndex) => (
-                    <div key={oIndex} className="quiz-option">
-                      <input
-                        type="radio"
-                        id={`q${question.id}-o${oIndex}`}
-                        name={`question-${question.id}`}
-                        checked={userAnswers[question.id] === oIndex}
-                        onChange={() => handleAnswerSelect(question.id, oIndex)}
-                      />
-                      <label htmlFor={`q${question.id}-o${oIndex}`}>{option}</label>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ))}
-          </div>
-          
-          <div className="quiz-actions">
-            <button 
-              className="submit-quiz-btn"
-              onClick={submitQuiz}
-              disabled={submitting || Object.keys(userAnswers).length !== quizQuestions.length}
-            >
-              {submitting ? <FaSpinner className="spinner" /> : 'Submit Quiz'}
-            </button>
-          </div>
-        </div>
-      )}
-      
-      {quizCompleted && (
+      {status === 'completed' && quizCompleted && (
         <div className={`quiz-results ${quizPassed ? 'passed' : 'failed'}`}>
           <h3>{quizPassed ? 'Congratulations!' : 'Almost There!'}</h3>
           <div className="quiz-score">
@@ -359,7 +226,7 @@ const LessonProgress = ({
             <p className="score-text">
               {quizPassed 
                 ? 'You passed the quiz and completed this lesson!' 
-                : 'You need 70% to pass. Try again!'}
+                : 'You need 70% to pass. Please try again.'}
             </p>
           </div>
           
@@ -387,4 +254,4 @@ const LessonProgress = ({
   );
 };
 
-export default LessonProgress; 
+export default LessonProgress;

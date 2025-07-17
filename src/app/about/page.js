@@ -85,7 +85,7 @@ export default function AboutPage() {
           <div className="story-text">
             <h2>Our Story</h2>
             <p>
-              Digitec was founded in 2020 with a simple goal: to make learning digital skills more 
+              Digitec was founded in 2015 with a simple goal: to make learning digital skills more 
               accessible, engaging, and effective. What started as a small team of passionate educators 
               and developers has grown into a thriving learning platform serving thousands of students worldwide.
             </p>
@@ -101,7 +101,7 @@ export default function AboutPage() {
           </div>
           <div className="story-image">
             <Image 
-              src="/about-image.jpg" 
+              src="/favicon.png" 
               alt="Digitec team" 
               width={500} 
               height={350} 

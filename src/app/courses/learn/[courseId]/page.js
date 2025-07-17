@@ -7,6 +7,7 @@ import Image from 'next/image';
 import { FaArrowLeft, FaLock, FaCheck, FaPlay, FaBook, FaQuestionCircle, FaFile, FaChevronRight, FaChevronDown } from 'react-icons/fa';
 import '../../../../styles/CourseLearn.css';
 import LessonProgress from '../../../../components/LessonProgress';
+import SuccessModal from '../../../../components/SuccessModal';
 
 export default function CourseLearnPage({ params }) {
   const { courseId } = params;
@@ -29,6 +30,9 @@ export default function CourseLearnPage({ params }) {
   const [transcript, setTranscript] = useState(null);
   const [showTranscript, setShowTranscript] = useState(false);
   const [activeTab, setActiveTab] = useState('content');
+  const [isEnrolling, setIsEnrolling] = useState(null); // Track which sub-course is being enrolled
+  const [modalOpen, setModalOpen] = useState(false);
+  const [modalContent, setModalContent] = useState({ title: '', message: '' });
   const router = useRouter();
   const supabase = createClientComponentClient();
 
@@ -93,43 +97,48 @@ export default function CourseLearnPage({ params }) {
         if (subCoursesError) throw subCoursesError;
         setSubCourses(subCoursesData);
         
-        // Set active sub-course to first enrolled sub-course
+        // Calculate Overall Course Progress
+        const subCourseIds = subCoursesData.map(sc => sc.id);
+        const { data: allLessons, error: allLessonsError } = await supabase
+          .from('lessons')
+          .select('id')
+          .in('sub_course_id', subCourseIds);
+
+        if (allLessonsError) throw allLessonsError;
+
+        const { data: completedProgress, error: progressError } = await supabase
+          .from('lesson_progress')
+          .select('lesson_id')
+          .eq('user_id', user.id)
+          .eq('course_id', courseId)
+          .eq('status', 'completed');
+        
+        if (progressError) throw progressError;
+
+        const totalLessonsCount = allLessons.length;
+        const completedLessonsCount = completedProgress ? completedProgress.length : 0;
+        const calculatedProgress = totalLessonsCount > 0 
+          ? Math.floor((completedLessonsCount / totalLessonsCount) * 100) 
+          : 0;
+        setProgress(calculatedProgress);
+
+        // Set active sub-course to the first one, and fetch its lessons
         if (subCoursesData && subCoursesData.length > 0) {
-          const enrolledSubCourseIds = subEnrollmentData.map(item => item.sub_course_id);
-          const firstEnrolledSubCourse = subCoursesData.find(sc => enrolledSubCourseIds.includes(sc.id));
-          
-          if (firstEnrolledSubCourse) {
-            setActiveSubCourse(firstEnrolledSubCourse);
-            
-            // Get lessons for the active sub-course
-            const { data: lessonsData, error: lessonsError } = await supabase
-              .from('lessons')
-              .select('*')
-              .eq('sub_course_id', firstEnrolledSubCourse.id)
-              .order('order_index', { ascending: true });
-              
-            if (lessonsError) throw lessonsError;
-            setLessons(lessonsData);
-            
-            if (lessonsData && lessonsData.length > 0) {
-              setActiveLessonId(lessonsData[0].id);
-              setActiveLesson(lessonsData[0]);
+          const firstEnrolledSubCourse = subCoursesData.find(sc => enrolledSubCourses.includes(sc.id)) || subCoursesData[0];
+          setActiveSubCourse(firstEnrolledSubCourse);
 
-              // Get progress for enrolled lessons
-              const { data: progressData, error: progressError } = await supabase
-                .from('lesson_progress')
-                .select('*')
-                .eq('user_id', user.id)
-                .eq('course_id', courseId);
+          const { data: lessonsData, error: lessonsError } = await supabase
+            .from('lessons')
+            .select('*')
+            .eq('sub_course_id', firstEnrolledSubCourse.id)
+            .order('order_index', { ascending: true });
 
-              if (!progressError && progressData) {
-                // Calculate overall progress
-                const completedLessons = progressData.filter(p => p.status === 'completed').length;
-                const totalLessons = lessonsData.length;
-                const calculatedProgress = totalLessons > 0 ? Math.floor((completedLessons / totalLessons) * 100) : 0;
-                setProgress(calculatedProgress);
-              }
-            }
+          if (lessonsError) throw lessonsError;
+          setLessons(lessonsData);
+
+          if (lessonsData && lessonsData.length > 0) {
+            setActiveLessonId(lessonsData[0].id);
+            setActiveLesson(lessonsData[0]);
           }
         }
       } catch (error) {
@@ -226,25 +235,86 @@ export default function CourseLearnPage({ params }) {
   };
 
   // Track lesson progress
+  const calculateAndUpdateProgress = async () => {
+    if (!user || !courseId || subCourses.length === 0) return;
+
+    try {
+      const subCourseIds = subCourses.map(sc => sc.id);
+      const { data: allLessons, error: allLessonsError } = await supabase
+        .from('lessons')
+        .select('id')
+        .in('sub_course_id', subCourseIds);
+
+      if (allLessonsError) throw allLessonsError;
+
+      const { data: completedProgress, error: progressError } = await supabase
+        .from('lesson_progress')
+        .select('lesson_id')
+        .eq('user_id', user.id)
+        .eq('course_id', courseId)
+        .eq('status', 'completed');
+      
+      if (progressError) throw progressError;
+
+      const totalLessonsCount = allLessons.length;
+      const completedLessonsCount = completedProgress ? completedProgress.length : 0;
+      const newProgress = totalLessonsCount > 0 
+        ? Math.floor((completedLessonsCount / totalLessonsCount) * 100) 
+        : 0;
+      
+      setProgress(newProgress);
+    } catch (error) {
+      console.error('Error calculating progress:', error);
+    }
+  };
+
   const updateLessonProgress = async (lessonId, progress = 0) => {
     if (!user || !lessonId) return;
-    
+
     try {
-      const { data, error } = await supabase
+      // Check if a record already exists
+      const { data: existingProgress, error: fetchError } = await supabase
         .from('lesson_progress')
-        .upsert({
-          user_id: user.id,
-          lesson_id: lessonId,
-          sub_course_id: activeSubCourse?.id,
-          course_id: courseId,
-          progress_percentage: progress,
-          status: progress >= 100 ? 'completed' : 'in_progress',
-          last_accessed: new Date().toISOString()
-        }, {
-          onConflict: 'user_id,lesson_id'
-        });
-      
-      if (error) throw error;
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('lesson_id', lessonId)
+        .single();
+
+      if (fetchError && fetchError.code !== 'PGRST116') {
+        // PGRST116 means no rows found, which is fine. Throw other errors.
+        throw fetchError;
+      }
+
+      const progressData = {
+        user_id: user.id,
+        lesson_id: lessonId,
+        sub_course_id: activeSubCourse?.id,
+        course_id: courseId,
+        progress_percentage: progress,
+        status: progress >= 100 ? 'completed' : 'in_progress',
+        last_accessed: new Date().toISOString(),
+      };
+
+      if (existingProgress) {
+        // Update existing record
+        const { error: updateError } = await supabase
+          .from('lesson_progress')
+          .update(progressData)
+          .eq('id', existingProgress.id);
+        if (updateError) throw updateError;
+      } else {
+        // Insert new record
+        const { error: insertError } = await supabase
+          .from('lesson_progress')
+          .insert(progressData);
+        if (insertError) throw insertError;
+      }
+
+      // After updating or inserting, recalculate the overall progress
+      if (progress >= 100) {
+        await calculateAndUpdateProgress();
+      }
+
     } catch (error) {
       console.error('Error updating lesson progress:', error);
     }
@@ -291,6 +361,41 @@ export default function CourseLearnPage({ params }) {
     }
   };
 
+  const handleEnrollInSubCourse = async (subCourseId) => {
+    if (!user) return;
+    setIsEnrolling(subCourseId);
+    try {
+      // Enroll the user in the sub-course
+      const { error } = await supabase
+        .from('sub_course_enrollments')
+        .insert({
+          user_id: user.id,
+          course_id: courseId,
+          sub_course_id: subCourseId,
+          status: 'in_progress'
+        });
+
+      if (error) throw error;
+
+      // Update the local state to reflect enrollment
+      setEnrolledSubCourses([...enrolledSubCourses, subCourseId]);
+
+      // Show success modal
+      const enrolledSubCourse = subCourses.find(sc => sc.id === subCourseId);
+      setModalContent({
+        title: 'Enrollment Successful!',
+        message: `You have successfully enrolled in the "${enrolledSubCourse?.title}" module.`
+      });
+      setModalOpen(true);
+
+    } catch (error) {
+      console.error('Error enrolling in sub-course:', error);
+      setError('Failed to enroll in the module. Please try again.');
+    } finally {
+      setIsEnrolling(null);
+    }
+  };
+
   if (loading) {
     return (
       <div className="course-learn-loading">
@@ -313,6 +418,13 @@ export default function CourseLearnPage({ params }) {
   }
 
   return (
+    <>
+      <SuccessModal 
+        isOpen={modalOpen}
+        onClose={() => setModalOpen(false)}
+        title={modalContent.title}
+        message={modalContent.message}
+      />
     <div className="course-learn-container">
       <div className="course-learn-header">
         <Link href="/dashboard" className="back-link">
@@ -340,19 +452,32 @@ export default function CourseLearnPage({ params }) {
               return (
                 <div 
                   key={subCourse.id} 
-                  className={`sub-course-nav-item ${isActive ? 'active' : ''} ${isEnrolled ? 'enrolled' : 'locked'}`}
+                  className={`sub-course-nav-item ${isActive ? 'active' : ''} ${!isEnrolled ? 'locked' : ''}`}
                   onClick={() => isEnrolled && handleSubCourseChange(subCourse)}
                 >
-                  <div className="sub-course-nav-icon">
-                    {isEnrolled ? (
-                      isActive ? <FaCheck /> : <FaPlay />
-                    ) : (
-                      <FaLock />
-                    )}
-                  </div>
                   <div className="sub-course-nav-info">
                     <h4>{subCourse.title}</h4>
                     <span>{subCourse.duration}</span>
+                  </div>
+                  <div className="sub-course-nav-status">
+                    {isEnrolled ? (
+                      <FaPlay className="status-icon play" />
+                    ) : (
+                      <button 
+                        className="enroll-now-btn"
+                        onClick={(e) => { 
+                          e.stopPropagation(); 
+                          handleEnrollInSubCourse(subCourse.id); 
+                        }}
+                        disabled={isEnrolling === subCourse.id}
+                      >
+                        {isEnrolling === subCourse.id ? (
+                          <div className="spinner-small"></div>
+                        ) : (
+                          'Enroll'
+                        )}
+                      </button>
+                    )}
                   </div>
                 </div>
               );
@@ -588,5 +713,6 @@ export default function CourseLearnPage({ params }) {
         </div>
       </div>
     </div>
+    </>
   );
 } 

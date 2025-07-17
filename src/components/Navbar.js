@@ -4,7 +4,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
-import { FaHome, FaInfoCircle, FaBook, FaEnvelope, FaUser, FaSignOutAlt, FaSignInAlt, FaChartLine, FaGraduationCap } from 'react-icons/fa';
+import { FaHome, FaInfoCircle, FaBook, FaEnvelope, FaUser, FaSignOutAlt, FaSignInAlt, FaChartLine, FaGraduationCap, FaBars, FaTimes } from 'react-icons/fa';
 import AOS from 'aos';
 import 'aos/dist/aos.css';
 import '../styles/Navbar.css';

@@ -40,11 +40,11 @@ const SuccessStoriesSection = () => {
   ];
 
   const clients = [
-    { id: 1, logo: "/images/client-1.svg", name: "Client 1" },
-    { id: 2, logo: "/images/client-2.svg", name: "Client 2" },
-    { id: 3, logo: "/images/client-3.svg", name: "Client 3" },
-    { id: 4, logo: "/images/client-4.svg", name: "Client 4" },
-    { id: 5, logo: "/images/client-5.svg", name: "Client 5" }
+    { id: 1, logo: "/images/client-1.svg", name: "Tech Solutions Ltd" },
+    { id: 2, logo: "/images/client-2.svg", name: "Global Finance Nigeria" },
+    { id: 3, logo: "/images/client-3.svg", name: "InnovateNG" },
+    { id: 4, logo: "/images/client-4.svg", name: "MediHealth" },
+    { id: 5, logo: "/images/client-5.svg", name: "ConstructPro" }
   ];
 
   const handleNext = () => {
@@ -134,21 +134,30 @@ const SuccessStoriesSection = () => {
         
         <div className="row mt-5">
           <div className="col-12" data-aos="fade-up">
-            <div className="clients-container">
-              <h3 className="clients-title">Trusted By Leading Organizations</h3>
-              <div className="clients-logos">
+          <section className="trusted-section" aria-label="Trusted by Leading Organisations">
+            <div className="trusted-inner">
+              <h3 className="trusted-title">
+                <span className="trusted-icon" aria-hidden="true">★</span>
+                Trusted by Leading Organisations
+                <span className="trusted-icon" aria-hidden="true">★</span>
+              </h3>
+              <p className="trusted-subtitle">We’re proud to be the choice of industry leaders and innovators.</p>
+              <div className="trusted-logos-grid">
                 {clients.map((client) => (
-                  <div key={client.id} className="client-logo">
-                    <Image 
-                      src={client.logo} 
-                      alt={client.name} 
-                      width={120} 
+                  <div key={client.id} className="trusted-logo-card" data-aos="zoom-in">
+                    <Image
+                      src={client.logo}
+                      alt={client.name}
+                      width={120}
                       height={60}
+                      className="trusted-logo-img"
                     />
+                    <p className="trusted-logo-name">{client.name}</p>
                   </div>
                 ))}
               </div>
             </div>
+          </section>
           </div>
         </div>
       </div>

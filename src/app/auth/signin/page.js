@@ -57,7 +57,7 @@ function SignInContent() {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/auth/callback?redirect=${redirectUrl}`,
+          redirectTo: `${process.env.NEXT_PUBLIC_AUTH_REDIRECT_URL || window.location.origin + '/auth/callback'}?redirect=${redirectUrl}`,
         },
       });
 

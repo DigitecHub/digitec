@@ -871,3 +871,66 @@
     font-size: 0.9rem;
   }
 } 
+/* Enrollment Button and Locked State Styles */
+.sub-course-nav-item.locked {
+  opacity: 0.7;
+  cursor: not-allowed;
+  background-color: #f9fafb;
+}
+
+.sub-course-nav-item.locked:hover {
+  background-color: #f9fafb;
+  transform: none;
+}
+
+.sub-course-nav-status {
+  margin-left: auto;
+  padding-right: 10px;
+}
+
+.enroll-now-btn {
+  background: linear-gradient(90deg, #eadc44 0%, #b38b29 100%);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 6px 12px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 60px;
+}
+
+.enroll-now-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(234, 220, 68, 0.3);
+}
+
+.enroll-now-btn:disabled {
+  background: #ccc;
+  cursor: wait;
+}
+
+/* Small Spinner for Enrollment Button */
+.spinner-small {
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  border-top-color: #fff;
+  width: 16px;
+  height: 16px;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.status-icon.play {
+    color: #b38b29;
+    font-size: 1.2rem;
+}

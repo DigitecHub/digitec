@@ -102,7 +102,7 @@ const HeroSection = () => {
             <div className="hero-image-container">
               <div className="hero-image">
                 <Image 
-                  src="/favicon.png" 
+                  src="/images/people/young-guy.png" 
                   alt="Digitec Training" 
                   width={600} 
                   height={500}
