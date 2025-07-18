@@ -240,6 +240,7 @@
   flex: 1;
   display: -webkit-box;
   -webkit-line-clamp: 3;
+  line-clamp: 3;
   -webkit-box-orient: vertical;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -274,7 +275,32 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-top: auto;
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.course-price {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.price-free {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #22c55e;
+}
+
+.price-label {
+  font-size: 0.8rem;
+  color: #94a3b8;
+}
+
+.price-amount {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #e2e8f0;
 }
 
 .course-details-btn,
@@ -299,8 +325,14 @@
 }
 
 .course-enroll-btn {
-  background-color: #ffc107;
-  color: #212529;
+  background: linear-gradient(135deg, #888a42 0%, #b9b41d 100%);
+  color: white;
+}
+
+.course-enroll-btn:hover {
+  background: linear-gradient(135deg, #a39f30 0%, #d9c728 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(229, 213, 70, 0.25);
 }
 
 .course-enroll-btn:hover {
@@ -310,8 +342,9 @@
 }
 
 .course-enroll-btn.locked {
-  background-color: #6c757d;
-  color: #fff;
+  background: rgba(255, 255, 255, 0.1);
+  color: #94a3b8;
+  cursor: not-allowed;
 }
 
 .course-enroll-btn.locked:hover {

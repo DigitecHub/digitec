@@ -22,11 +22,9 @@ export default function CoursesPage() {
         if (userError) throw userError;
         setUser(user);
         
-        // Get all courses
+        // Get all courses with pricing info
         const { data: coursesData, error: coursesError } = await supabase
-          .from('courses')
-          .select('*')
-          .order('order_index', { ascending: true });
+          .rpc('get_courses_with_pricing');
           
         if (coursesError) throw coursesError;
         setCourses(coursesData);
@@ -54,6 +52,15 @@ export default function CoursesPage() {
       top: 0,
       behavior: 'smooth'
     });
+  };
+
+  const formatPrice = (price, currency = 'NGN') => {
+    if (price === null || price === undefined) return '';
+    return new Intl.NumberFormat('en-NG', {
+      style: 'currency',
+      currency: currency,
+      minimumFractionDigits: 0,
+    }).format(price);
   };
 
   if (loading) {
@@ -111,18 +118,20 @@ export default function CoursesPage() {
                 <span className="course-duration">{course.duration}</span>
               </div>
               <div className="course-actions">
-                <Link href={`/courses/${course.id}`} className="course-details-btn">
-                  View Details <FaArrowRight />
+                <div className="course-price">
+                  {course.is_completely_free ? (
+                    <span className="price-free">Free</span>
+                  ) : (
+                    <>
+                      <span className="price-label">Starting from</span>
+                      <span className="price-amount">{formatPrice(course.min_price, course.currency)}</span>
+                    </>
+                  )}
+                </div>
+                <Link href={`/courses/${course.id}`} className="course-enroll-btn">
+                  {course.is_completely_free ? 'Enroll Now' : 'View Options'}
+                  <FaArrowRight />
                 </Link>
-                {user ? (
-                  <Link href={`/enrollment/${course.id}`} className="course-enroll-btn">
-                    Enroll Now
-                  </Link>
-                ) : (
-                  <Link href={`/auth/signin?redirect=/enrollment/${course.id}`} className="course-enroll-btn locked">
-                    <FaLock /> Sign in to Enroll
-                  </Link>
-                )}
               </div>
             </div>
           </div>

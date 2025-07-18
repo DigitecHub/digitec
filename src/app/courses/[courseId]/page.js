@@ -29,23 +29,21 @@ export default function CourseDetailPage({ params }) {
         if (userError) throw userError;
         setUser(user);
         
-        // Get course details
+        // Get course details with pricing
         const { data: courseData, error: courseError } = await supabase
-          .from('courses')
-          .select('*')
-          .eq('id', courseId)
+          .rpc('get_course_details_with_pricing', { p_course_id: courseId })
           .single();
-          
+
         if (courseError) throw courseError;
         setCourse(courseData);
-        
-        // Get sub-courses
+
+        // Also fetch sub-courses to display them
         const { data: subCoursesData, error: subCoursesError } = await supabase
           .from('sub_courses')
           .select('*')
           .eq('course_id', courseId)
           .order('order_index', { ascending: true });
-          
+
         if (subCoursesError) throw subCoursesError;
         setSubCourses(subCoursesData);
         
@@ -127,6 +125,15 @@ export default function CourseDetailPage({ params }) {
       </div>
     );
   }
+
+  const formatPrice = (price, currency = 'NGN') => {
+    if (price === null || price === undefined) return 'Free';
+    return new Intl.NumberFormat('en-NG', {
+      style: 'currency',
+      currency,
+      minimumFractionDigits: 0,
+    }).format(price);
+  };
 
   return (
     <div className="course-detail-container">
@@ -234,13 +241,16 @@ export default function CourseDetailPage({ params }) {
             </div>
           </div>
         </div>
-        
+
         <div className="course-sidebar">
           <div className="enrollment-card">
             <div className="price-section">
               <h3>Course Price</h3>
-              <div className="price">Free</div>
-              <div className="price-note">Limited time offer</div>
+              <div className="price">
+                {course.is_completely_free
+                  ? 'Free'
+                  : `Starting from ${formatPrice(course.min_price, course.currency)}`}
+              </div>
             </div>
             
             <div className="enrollment-info">

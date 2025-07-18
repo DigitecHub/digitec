@@ -115,6 +115,11 @@
   border-left: 4px solid #dc3545;
 }
 
+.enrollment-alert.success {
+  background-color: rgba(40, 167, 69, 0.1);
+  border-left: 4px solid #28a745;
+}
+
 .enrollment-alert p {
   margin: 0;
   color: #212529;
@@ -229,7 +234,7 @@
 
 .sub-course-item.selected {
   border-color: #ffc107;
-  background-color: rgba(255, 193, 7, 0.05);
+  background-color: #fffaf0;
 }
 
 .checkbox {
@@ -242,7 +247,24 @@
   justify-content: center;
   color: #ffc107;
   background-color: #fff;
-  margin-top: 0.25rem;
+  transition: all 0.3s ease;
+}
+
+.sub-course-item.enrolled {
+  background-color: #f8f9fa;
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.sub-course-item.enrolled .sub-course-info h4,
+.sub-course-item.enrolled .sub-course-info p {
+  text-decoration: line-through;
+}
+
+.enrolled-badge {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #28a745;
 }
 
 .sub-course-item.selected .checkbox {
@@ -275,6 +297,14 @@
   flex-wrap: wrap;
 }
 
+.sub-course-price {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #212529;
+  margin-left: auto;
+  padding-left: 1rem;
+}
+
 .sub-course-duration {
   display: inline-block;
   font-size: 0.85rem;
@@ -299,27 +329,32 @@
   font-size: 0.7rem;
 }
 
-/* Enrollment Actions */
-.enrollment-actions {
+/* Enrollment Summary */
+.enrollment-summary {
   margin-top: 2rem;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 1.5rem;
-}
-
-.enrollment-note {
-  text-align: center;
-  color: #6c757d;
-  font-size: 0.9rem;
-  background-color: rgba(255, 193, 7, 0.1);
-  padding: 1rem;
+  padding: 1.5rem;
+  background-color: #f8f9fa;
   border-radius: 8px;
-  max-width: 500px;
+  border: 1px solid #e9ecef;
 }
 
-.enrollment-note strong {
+.total-price {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.total-price h3 {
+  font-size: 1.2rem;
+  font-weight: 600;
   color: #212529;
+}
+
+.total-price p {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: #ffc107;
 }
 
 .enroll-button {

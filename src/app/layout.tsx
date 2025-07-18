@@ -1,29 +1,15 @@
-import './globals.css';
-import type { Metadata } from 'next';
-import { Inter } from 'next/font/google';
-import 'bootstrap/dist/css/bootstrap.min.css';
-import Navbar from '../components/Navbar';
-import Footer from '../components/Footer';
+import './globals.css'
+import NavbarWrapper from './NavbarWrapper'
+import { ReactNode } from 'react'
 
-const inter = Inter({ subsets: ['latin'] });
-
-export const metadata: Metadata = {
-  title: 'Digitec - IT Training & Consulting Services',
-  description: 'Leading IT training and consulting company providing professional certifications, cloud solutions, and digital transformation services.',
-};
-
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en">
-      <body className={inter.className}>
-        <Navbar />
+      <head />
+      <body>
+        <NavbarWrapper />
         {children}
-        <Footer />
       </body>
     </html>
-  );
+  )
 }

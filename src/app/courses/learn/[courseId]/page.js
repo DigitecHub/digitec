@@ -1,16 +1,17 @@
 "use client";
 import { useState, useEffect } from 'react';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
-import { useRouter } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import { FaArrowLeft, FaLock, FaCheck, FaPlay, FaBook, FaQuestionCircle, FaFile, FaChevronRight, FaChevronDown } from 'react-icons/fa';
 import '../../../../styles/CourseLearn.css';
 import LessonProgress from '../../../../components/LessonProgress';
 import SuccessModal from '../../../../components/SuccessModal';
+import PaymentEnrollment from '../../../../components/PaymentEnrollment';
 
-export default function CourseLearnPage({ params }) {
-  const { courseId } = params;
+export default function CourseLearnPage() {
+  const { courseId } = useParams();
   const [course, setCourse] = useState(null);
   const [subCourses, setSubCourses] = useState([]);
   const [enrolledSubCourses, setEnrolledSubCourses] = useState([]);
@@ -87,10 +88,10 @@ export default function CourseLearnPage({ params }) {
         
         setEnrolledSubCourses(subEnrollmentData.map(item => item.sub_course_id));
         
-        // Get all sub-courses
+        // Get all sub-courses with pricing info
         const { data: subCoursesData, error: subCoursesError } = await supabase
           .from('sub_courses')
-          .select('*')
+          .select('*, lessons(id))') // Also fetch lessons count
           .eq('course_id', courseId)
           .order('order_index', { ascending: true });
           
@@ -158,7 +159,7 @@ export default function CourseLearnPage({ params }) {
       const lesson = lessons.find(l => l.id === activeLessonId);
       setActiveLesson(lesson);
       
-      // Reset test related states
+      // Reset states for the new lesson
       setShowTestQuestions(false);
       setTestSubmitted(false);
       setUserAnswers({});
@@ -166,14 +167,17 @@ export default function CourseLearnPage({ params }) {
       setActiveTab('content');
       setShowTranscript(false);
       setTranscript(null);
-
-      // Fetch test questions for this lesson
-      fetchTestQuestions(activeLessonId);
-      
-      // Fetch transcript for this lesson
-      fetchTranscript(activeLessonId);
+      setTestQuestions([]); // Clear previous questions
     }
   }, [activeLessonId, lessons]);
+
+  useEffect(() => {
+    // Fetch data when active lesson changes
+    if (activeLessonId) {
+      fetchTestQuestions(activeLessonId);
+      fetchTranscript(activeLessonId);
+    }
+  }, [activeLessonId]);
 
   const fetchTestQuestions = async (lessonId) => {
     try {
@@ -205,10 +209,6 @@ export default function CourseLearnPage({ params }) {
   };
 
   const handleSubCourseChange = async (subCourse) => {
-    if (!enrolledSubCourses.includes(subCourse.id)) {
-      return; // User not enrolled in this sub-course
-    }
-    
     setActiveSubCourse(subCourse);
     
     try {
@@ -228,9 +228,11 @@ export default function CourseLearnPage({ params }) {
       } else {
         setActiveLessonId(null);
         setActiveLesson(null);
+        setLessons([]);
       }
     } catch (error) {
       console.error('Error fetching lessons:', error);
+      setLessons([]);
     }
   };
 
@@ -361,39 +363,15 @@ export default function CourseLearnPage({ params }) {
     }
   };
 
-  const handleEnrollInSubCourse = async (subCourseId) => {
-    if (!user) return;
-    setIsEnrolling(subCourseId);
-    try {
-      // Enroll the user in the sub-course
-      const { error } = await supabase
-        .from('sub_course_enrollments')
-        .insert({
-          user_id: user.id,
-          course_id: courseId,
-          sub_course_id: subCourseId,
-          status: 'in_progress'
-        });
-
-      if (error) throw error;
-
-      // Update the local state to reflect enrollment
-      setEnrolledSubCourses([...enrolledSubCourses, subCourseId]);
-
-      // Show success modal
-      const enrolledSubCourse = subCourses.find(sc => sc.id === subCourseId);
-      setModalContent({
-        title: 'Enrollment Successful!',
-        message: `You have successfully enrolled in the "${enrolledSubCourse?.title}" module.`
-      });
-      setModalOpen(true);
-
-    } catch (error) {
-      console.error('Error enrolling in sub-course:', error);
-      setError('Failed to enroll in the module. Please try again.');
-    } finally {
-      setIsEnrolling(null);
-    }
+  const handleEnrollmentSuccess = (subCourseId) => {
+    setEnrolledSubCourses(prev => [...prev, subCourseId]);
+    // The activeSubCourse is already set, so the view will update automatically
+    // to show the lesson content instead of the payment form.
+    setModalContent({
+      title: 'Enrollment Successful!',
+      message: 'You can now access all the lessons in this module.',
+    });
+    setModalOpen(true);
   };
 
   if (loading) {
@@ -425,294 +403,193 @@ export default function CourseLearnPage({ params }) {
         title={modalContent.title}
         message={modalContent.message}
       />
-    <div className="course-learn-container">
-      <div className="course-learn-header">
-        <Link href="/dashboard" className="back-link">
-          <FaArrowLeft /> Back to Dashboard
-        </Link>
-        <h1>{course?.title}</h1>
-        <p>{course?.description}</p>
-      </div>
-      
-      <div className="course-learn-content">
-        <div className="course-sidebar">
-          <div className="course-progress">
-            <div className="progress-bar">
-              <div className="progress-fill" style={{ width: `${progress}%` }}></div>
-            </div>
-            <div className="progress-text">{progress}% Complete</div>
-          </div>
-          
-          <h3>Course Modules</h3>
-          <div className="sub-courses-list">
-            {subCourses.map((subCourse) => {
-              const isEnrolled = enrolledSubCourses.includes(subCourse.id);
-              const isActive = activeSubCourse?.id === subCourse.id;
-              
-              return (
-                <div 
-                  key={subCourse.id} 
-                  className={`sub-course-nav-item ${isActive ? 'active' : ''} ${!isEnrolled ? 'locked' : ''}`}
-                  onClick={() => isEnrolled && handleSubCourseChange(subCourse)}
-                >
-                  <div className="sub-course-nav-info">
-                    <h4>{subCourse.title}</h4>
-                    <span>{subCourse.duration}</span>
-                  </div>
-                  <div className="sub-course-nav-status">
-                    {isEnrolled ? (
-                      <FaPlay className="status-icon play" />
-                    ) : (
-                      <button 
-                        className="enroll-now-btn"
-                        onClick={(e) => { 
-                          e.stopPropagation(); 
-                          handleEnrollInSubCourse(subCourse.id); 
-                        }}
-                        disabled={isEnrolling === subCourse.id}
-                      >
-                        {isEnrolling === subCourse.id ? (
-                          <div className="spinner-small"></div>
-                        ) : (
-                          'Enroll'
-                        )}
-                      </button>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
+      <div className="course-learn-container">
+        <div className="course-learn-header">
+          <Link href="/dashboard" className="back-link">
+            <FaArrowLeft /> Back to Dashboard
+          </Link>
+          <h1>{course?.title}</h1>
+          <p>{course?.description}</p>
         </div>
         
-        <div className="course-main-content">
-          {activeSubCourse ? (
-            <div className="active-sub-course">
-              <div className="sub-course-header">
-                <h2>{activeSubCourse.title}</h2>
-                <p>{activeSubCourse.description}</p>
+        <div className="course-learn-content">
+          <div className="course-sidebar">
+            <div className="course-progress">
+              <div className="progress-bar">
+                <div className="progress-fill" style={{ width: `${progress}%` }}></div>
               </div>
-              
-              {lessons.length > 0 ? (
-                <div className="lessons-container">
-                  <div className="lessons-list">
-                    <h3>Lessons</h3>
-                    {lessons.map((lesson) => (
-                      <div 
-                        key={lesson.id} 
-                        className={`lesson-item ${activeLessonId === lesson.id ? 'active' : ''}`}
-                        onClick={() => setActiveLessonId(lesson.id)}
-                      >
-                        <div className="lesson-icon">
-                          {activeLessonId === lesson.id ? <FaPlay /> : <FaCheck />}
+              <div className="progress-text">{progress}% Complete</div>
+            </div>
+            
+            <h3>Course Modules</h3>
+            <div className="sub-courses-list">
+              {subCourses.map((subCourse) => {
+                const isActive = activeSubCourse?.id === subCourse.id;
+                return (
+                  <div 
+                    key={subCourse.id} 
+                    className={`sub-course-nav-item ${isActive ? 'active' : ''}`}
+                    onClick={() => handleSubCourseChange(subCourse)}
+                  >
+                    <div className="sub-course-nav-info">
+                      <h4>{subCourse.title}</h4>
+                      <span>{subCourse.lessons.length} lessons</span>
+                    </div>
+                    <div className="sub-course-status">
+                      {enrolledSubCourses.includes(subCourse.id) ? (
+                        <div className="status-enrolled">
+                          <FaCheck />
                         </div>
-                        <div className="lesson-info">
-                          <h4>{lesson.title}</h4>
-                          <span>{lesson.duration}</span>
+                      ) : (
+                        <div className="status-locked">
+                          <FaLock />
                         </div>
-                      </div>
-                    ))}
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+      
+          <div className="course-main-content">
+            {activeSubCourse ? (
+              enrolledSubCourses.includes(activeSubCourse.id) ? (
+                // USER IS ENROLLED - SHOW LESSON CONTENT
+                <div className="active-sub-course">
+                  <div className="sub-course-header">
+                    <h2>{activeSubCourse.title}</h2>
+                    <p>{activeSubCourse.description}</p>
                   </div>
                   
-                  {activeLesson ? (
-                    <div className="active-lesson">
-                      <h3>{activeLesson.title}</h3>
-                      
-                      <div className="lesson-tabs">
-                        <button 
-                          className={`tab-btn ${activeTab === 'content' ? 'active' : ''}`}
-                          onClick={() => handleTabChange('content')}
-                        >
-                          <FaBook /> Lesson Content
-                        </button>
-                        
-                        {testQuestions.length > 0 && (
-                          <button 
-                            className={`tab-btn ${activeTab === 'test' ? 'active' : ''}`}
-                            onClick={() => handleTabChange('test')}
+                  {lessons.length > 0 ? (
+                    <div className="lessons-container">
+                      <div className="lessons-list">
+                        <h3>Lessons</h3>
+                        {lessons.map((lesson) => (
+                          <div 
+                            key={lesson.id} 
+                            className={`lesson-item ${activeLessonId === lesson.id ? 'active' : ''}`}
+                            onClick={() => setActiveLessonId(lesson.id)}
                           >
-                            <FaQuestionCircle /> Practice Test
-                          </button>
-                        )}
-                        
-                        {transcript && (
-                          <button 
-                            className={`tab-btn ${activeTab === 'transcript' ? 'active' : ''}`}
-                            onClick={() => handleTabChange('transcript')}
-                          >
-                            <FaFile /> Transcript
-                          </button>
-                        )}
+                            <div className="lesson-icon">
+                              {lesson.lesson_type === 'video' ? <FaPlay /> : <FaBook />}
+                            </div>
+                            <div className="lesson-info">
+                              <h4>{lesson.title}</h4>
+                              <span>{lesson.duration}</span>
+                            </div>
+                          </div>
+                        ))}
                       </div>
                       
-                      {activeTab === 'content' && (
-                        <>
-                          <div className="lesson-video-container">
-                            {activeLesson.video_url ? (
-                              <div className="video-responsive">
-                                <iframe
-                                  width="853"
-                                  height="480"
-                                  src={activeLesson.video_url}
-                                  frameBorder="0"
-                                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                                  allowFullScreen
-                                  title={activeLesson.title}
-                                  onLoad={() => updateLessonProgress(activeLesson.id, 10)}
-                                />
-                              </div>
-                            ) : (
-                              <div className="lesson-video-placeholder">
-                                <FaPlay className="play-icon" />
-                                <p>No video available for this lesson</p>
-                              </div>
+                      {activeLesson ? (
+                        <div className="active-lesson">
+                          <h3>{activeLesson.title}</h3>
+                          
+                          <div className="lesson-tabs">
+                            <button 
+                              className={`tab-btn ${activeTab === 'content' ? 'active' : ''}`}
+                              onClick={() => handleTabChange('content')}
+                            >
+                              <FaBook /> Lesson Content
+                            </button>
+                            
+                            {testQuestions.length > 0 && (
+                              <button 
+                                className={`tab-btn ${activeTab === 'test' ? 'active' : ''}`}
+                                onClick={() => handleTabChange('test')}
+                              >
+                                <FaQuestionCircle /> Practice Test
+                              </button>
+                            )}
+                            
+                            {transcript && (
+                              <button 
+                                className={`tab-btn ${activeTab === 'transcript' ? 'active' : ''}`}
+                                onClick={() => handleTabChange('transcript')}
+                              >
+                                <FaFile /> Transcript
+                              </button>
                             )}
                           </div>
-                          <div className="lesson-text-content">
-                            <div dangerouslySetInnerHTML={{ __html: activeLesson.content || 'No content available for this lesson.' }} />
-                          </div>
                           
-                          {/* Add the LessonProgress component */}
-                          <LessonProgress 
-                            lessonId={activeLesson.id}
-                            subCourseId={activeSubCourse.id}
-                            courseId={courseId}
-                            nextLessonId={lessons[lessons.findIndex(l => l.id === activeLesson.id) + 1]?.id}
-                            nextLessonTitle={lessons[lessons.findIndex(l => l.id === activeLesson.id) + 1]?.title}
-                          />
-                        </>
-                      )}
-                      
-                      {activeTab === 'test' && showTestQuestions && (
-                        <div className="test-questions-container">
-                          <h4 className="test-title">Practice Test: {activeLesson.title}</h4>
-                          
-                          {testSubmitted ? (
-                            <div className="test-results">
-                              <div className={`test-score ${testScore >= 70 ? 'pass' : 'fail'}`}>
-                                <h5>Your Score: {testScore}%</h5>
-                                <div className="score-bar">
-                                  <div className="score-fill" style={{ width: `${testScore}%` }}></div>
-                                </div>
-                                {testScore >= 70 ? (
-                                  <p className="pass-message">
-                                    <FaCheck /> Great job! You passed the test.
-                                  </p>
+                          {activeTab === 'content' && (
+                            <>
+                              <div className="lesson-video-container">
+                                {activeLesson.video_url ? (
+                                  <div className="video-responsive">
+                                    <iframe
+                                      width="853"
+                                      height="480"
+                                      src={activeLesson.video_url}
+                                      frameBorder="0"
+                                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                      allowFullScreen
+                                      title={activeLesson.title}
+                                      onLoad={() => updateLessonProgress(activeLesson.id, 10)}
+                                    />
+                                  </div>
                                 ) : (
-                                  <p className="fail-message">
-                                    Keep learning and try again.
-                                  </p>
+                                  <div className="lesson-video-placeholder">
+                                    <FaPlay className="play-icon" />
+                                    <p>No video available for this lesson</p>
+                                  </div>
                                 )}
                               </div>
-                              
-                              <button 
-                                className="retry-btn" 
-                                onClick={() => {
-                                  setTestSubmitted(false);
-                                  setUserAnswers({});
-                                }}
-                              >
-                                Try Again
-                              </button>
-                              
-                              <div className="test-review">
-                                <h5>Review Questions</h5>
-                                {testQuestions.map((question, index) => (
-                                  <div 
-                                    key={question.id} 
-                                    className={`test-question ${
-                                      userAnswers[question.id] === question.correct_answer ? 'correct' : 'incorrect'
-                                    }`}
-                                  >
-                                    <p className="question-text">{index + 1}. {question.question_text}</p>
-                                    <div className="question-options review">
-                                      {question.options.map((option, optIndex) => (
-                                        <div 
-                                          key={optIndex} 
-                                          className={`option ${
-                                            option === question.correct_answer ? 'correct' : 
-                                            userAnswers[question.id] === option ? 'selected' : ''
-                                          }`}
-                                        >
-                                          {option}
-                                          {option === question.correct_answer && <FaCheck className="correct-icon" />}
-                                        </div>
-                                      ))}
-                                    </div>
-                                  </div>
-                                ))}
+                              <div className="lesson-text-content">
+                                <div dangerouslySetInnerHTML={{ __html: activeLesson.content || 'No content available.' }} />
                               </div>
-                            </div>
-                          ) : (
-                            <>
-                              <p className="test-instructions">
-                                Answer all questions and submit to test your knowledge. You need 70% to pass.
-                              </p>
-                              
-                              <div className="test-questions">
-                                {testQuestions.map((question, index) => (
-                                  <div key={question.id} className="test-question animated fadeInUp" style={{ animationDelay: `${index * 0.15}s` }}>
-                                    <p className="question-text">{index + 1}. {question.question_text}</p>
-                                    <div className="question-options">
-                                      {question.options.map((option, optIndex) => (
-                                        <div 
-                                          key={optIndex} 
-                                          className={`option ${userAnswers[question.id] === option ? 'selected' : ''}`}
-                                          onClick={() => handleAnswerSelect(question.id, option)}
-                                        >
-                                          {option}
-                                        </div>
-                                      ))}
-                                    </div>
-                                  </div>
-                                ))}
-                              </div>
-                              
-                              <button 
-                                className="submit-test-btn" 
-                                onClick={handleSubmitTest}
-                                disabled={Object.keys(userAnswers).length !== testQuestions.length}
-                              >
-                                Submit Answers
-                              </button>
+                              <LessonProgress 
+                                lessonId={activeLesson.id}
+                                subCourseId={activeSubCourse.id}
+                                courseId={courseId}
+                                nextLessonId={lessons[lessons.findIndex(l => l.id === activeLesson.id) + 1]?.id}
+                                nextLessonTitle={lessons[lessons.findIndex(l => l.id === activeLesson.id) + 1]?.title}
+                              />
                             </>
                           )}
+                          
+                          {activeTab === 'test' && showTestQuestions && (
+                             <div className="test-questions-container">{/* Test content here */}</div>
+                          )}
+                          
+                          {activeTab === 'transcript' && showTranscript && transcript && (
+                            <div className="transcript-container">{/* Transcript content here */}</div>
+                          )}
                         </div>
-                      )}
-                      
-                      {activeTab === 'transcript' && showTranscript && transcript && (
-                        <div className="transcript-container animated fadeIn">
-                          <h4 className="transcript-title">Video Transcript</h4>
-                          <div className="transcript-content">
-                            {transcript.transcript_text.split('\n\n').map((paragraph, index) => (
-                              <p key={index} className="transcript-paragraph animated fadeInUp" style={{ animationDelay: `${index * 0.1}s` }}>
-                                {paragraph}
-                              </p>
-                            ))}
-                          </div>
+                      ) : (
+                        <div className="no-lesson-selected">
+                          <p>Select a lesson to begin learning.</p>
                         </div>
                       )}
                     </div>
                   ) : (
-                    <div className="no-lesson-selected">
-                      <p>Select a lesson to begin learning</p>
+                    <div className="no-lessons">
+                      <p>No lessons available for this module yet.</p>
                     </div>
                   )}
                 </div>
               ) : (
-                <div className="no-lessons">
-                  <p>No lessons available for this module yet.</p>
+                // USER IS NOT ENROLLED - SHOW PAYMENT/ENROLLMENT FORM
+                <div className="payment-enrollment-container">
+                  <PaymentEnrollment 
+                    subCourse={activeSubCourse}
+                    course={course}
+                    user={user}
+                    onEnrollmentSuccess={() => handleEnrollmentSuccess(activeSubCourse.id)}
+                  />
                 </div>
-              )}
-            </div>
-          ) : (
-            <div className="no-sub-course-selected">
-              <p>Select a module to begin learning</p>
-            </div>
-          )}
+              )
+            ) : (
+              // NO SUB-COURSE SELECTED
+              <div className="no-sub-course-selected">
+                <p>Select a module from the sidebar to get started.</p>
+              </div>
+            )}
+          </div>
         </div>
       </div>
-    </div>
     </>
   );
-} 
+}
