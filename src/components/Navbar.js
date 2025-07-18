@@ -274,28 +274,60 @@ const Navbar = () => {
           <div className={`mobile-menu-overlay${isMobileMenuOpen ? ' open' : ''}`} onClick={closeMobileMenu}></div>
 
           <div className={`mobile-menu${isMobileMenuOpen ? ' open' : ''}`}>
-            <ul className="mobile-nav">
-              {navLinks.map((link, index) => (
-                <li key={index} className="mobile-nav-item">
-                  <Link
-                    href={link.path}
-                    className={`mobile-nav-link${pathname === link.path ? ' active' : ''}`}
-                    onClick={closeMobileMenu}
-                  >
-                    <span className="nav-icon">{link.icon}</span>
-                    {link.title}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-            <div className="mobile-auth">
+            <div className="mobile-menu-header">
+              <button onClick={closeMobileMenu} className="mobile-menu-close" aria-label="Close menu">
+                <FaTimes />
+              </button>
+            </div>
+
+            <div className="mobile-menu-body">
+              {user && (
+                <div className="mobile-user-profile">
+                  {user.user_metadata?.avatar_url ? (
+                    <Image
+                      src={user.user_metadata.avatar_url}
+                      alt={userProfile?.full_name || 'User'}
+                      width={60}
+                      height={60}
+                      className="mobile-avatar-image"
+                    />
+                  ) : (
+                    <div className="mobile-avatar-placeholder">
+                      {(userProfile?.full_name?.[0] || user.email?.[0] || 'U').toUpperCase()}
+                    </div>
+                  )}
+                  <h3 className="mobile-user-name">{userProfile?.full_name || 'User'}</h3>
+                  <p className="mobile-user-email">{user.email}</p>
+                </div>
+              )}
+
+              <ul className="mobile-nav">
+                {navLinks.map((link) => (
+                  <li key={link.path}>
+                    <Link href={link.path} className={`mobile-nav-link${pathname === link.path ? ' active' : ''}`} onClick={closeMobileMenu}>
+                      {link.icon}<span>{link.title}</span>
+                    </Link>
+                  </li>
+                ))}
+                {user && (
+                  <>
+                    <li className="nav-divider"></li>
+                    <li><Link href="/dashboard" className={`mobile-nav-link${pathname === '/dashboard' ? ' active' : ''}`} onClick={closeMobileMenu}><FaChartLine /><span>Dashboard</span></Link></li>
+                    <li><Link href="/profile" className={`mobile-nav-link${pathname === '/profile' ? ' active' : ''}`} onClick={closeMobileMenu}><FaUser /><span>My Profile</span></Link></li>
+                    <li><Link href="/courses" className={`mobile-nav-link${pathname === '/mylearning' ? ' active' : ''}`} onClick={closeMobileMenu}><FaGraduationCap /><span>My Learning</span></Link></li>
+                  </>
+                )}
+              </ul>
+            </div>
+
+            <div className="mobile-menu-footer">
               {user ? (
                 <button className="mobile-sign-out" onClick={() => { handleSignOut(); closeMobileMenu(); }}>
-                  <FaSignOutAlt className="dropdown-icon" /> Sign Out
+                  <FaSignOutAlt /> Sign Out
                 </button>
               ) : (
                 <Link href="/auth/signin" className="mobile-sign-in" onClick={closeMobileMenu}>
-                  <FaSignInAlt className="dropdown-icon" /> Sign In
+                  <FaSignInAlt /> Sign In
                 </Link>
               )}
             </div>
