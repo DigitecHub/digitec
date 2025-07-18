@@ -55,8 +55,39 @@ export default function Dashboard() {
                 
                 if (subEnrollmentsError) throw subEnrollmentsError;
                 
+                // Calculate progress for this course (same logic as learning page)
+                let progress = 0;
+                if (subEnrollments && subEnrollments.length > 0) {
+                  const subCourseIds = subEnrollments.map(se => se.sub_course_id);
+                  
+                  // Get all lessons for enrolled sub-courses
+                  const { data: allLessons, error: allLessonsError } = await supabase
+                    .from('lessons')
+                    .select('id')
+                    .in('sub_course_id', subCourseIds);
+
+                  if (allLessonsError) throw allLessonsError;
+
+                  // Get completed lesson progress for this user and course
+                  const { data: completedProgress, error: progressError } = await supabase
+                    .from('lesson_progress')
+                    .select('lesson_id')
+                    .eq('user_id', user.id)
+                    .eq('course_id', enrollment.course_id)
+                    .eq('status', 'completed');
+                  
+                  if (progressError) throw progressError;
+
+                  const totalLessonsCount = allLessons ? allLessons.length : 0;
+                  const completedLessonsCount = completedProgress ? completedProgress.length : 0;
+                  progress = totalLessonsCount > 0 
+                    ? Math.floor((completedLessonsCount / totalLessonsCount) * 100) 
+                    : 0;
+                }
+                
                 return {
                   ...enrollment,
+                  progress,
                   sub_enrollments: subEnrollments || []
                 };
               })
@@ -77,6 +108,10 @@ export default function Dashboard() {
     
     fetchUserAndCourses();
   }, [supabase]);
+
+  const averageProgress = enrolledCourses.length > 0
+    ? Math.round(enrolledCourses.reduce((acc, course) => acc + course.progress, 0) / enrolledCourses.length)
+    : 0;
 
   if (loading) {
     return (
@@ -119,7 +154,7 @@ export default function Dashboard() {
               <FaChartLine />
             </div>
             <div className="stat-info">
-              <span className="stat-value">0%</span>
+              <span className="stat-value">{averageProgress}%</span>
               <span className="stat-label">Average Progress</span>
             </div>
           </div>
@@ -179,10 +214,10 @@ export default function Dashboard() {
                     <div className="progress-container">
                       <div className="progress-label">
                         <span>Progress</span>
-                        <span>0%</span>
+                        <span>{enrollment.progress}%</span>
                       </div>
                       <div className="progress-bar">
-                        <div className="progress-fill" style={{ width: '0%' }}></div>
+                        <div className="progress-fill" style={{ width: `${enrollment.progress}%` }}></div>
                       </div>
                     </div>
                     <Link 

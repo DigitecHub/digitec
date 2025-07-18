@@ -33,31 +33,36 @@ export async function POST(request) {
     }
     console.log(`Authenticated user: ${user.email} (ID: ${user.id})`);
 
-    // First, create pending payment records for each sub-course
-    const initialPaymentPayloads = subCourseIds.map(subCourseId => ({
+    // First, create a single pending payment record for the transaction
+    const initialPaymentPayload = {
       user_id: user.id,
-      sub_course_id: subCourseId,
+      sub_course_id: subCourseIds[0], // Use the first sub-course as primary
       course_id: courseId,
       paystack_reference: reference,
       payment_status: 'pending',
-      amount: 0 // We don't know the amount yet
-    }));
-    console.log('Attempting to insert pending payment records:', initialPaymentPayloads);
+      amount: 0, // We don't know the amount yet
+      metadata: {
+        all_sub_course_ids: subCourseIds,
+        sub_course_count: subCourseIds.length
+      }
+    };
+    console.log('Attempting to insert single payment record:', initialPaymentPayload);
 
-    const { data: initialPayments, error: initialPaymentError } = await supabase
+    const { data: initialPayment, error: initialPaymentError } = await supabase
       .from('payments')
-      .insert(initialPaymentPayloads)
-      .select('id');
+      .insert(initialPaymentPayload)
+      .select('id')
+      .single();
 
     if (initialPaymentError) {
-      console.error('DATABASE ERROR: Failed to create initial payment records.', initialPaymentError);
+      console.error('DATABASE ERROR: Failed to create payment record.', initialPaymentError);
       return NextResponse.json(
         { status: 'error', message: 'Failed to initialize payment record', details: initialPaymentError.message },
         { status: 500 }
       );
     }
-    console.log(`Successfully created ${initialPayments.length} pending payment records`);
-    const paymentIds = initialPayments.map(p => p.id);
+    console.log('Successfully created payment record with ID:', initialPayment.id);
+    const paymentId = initialPayment.id;
 
     // Verify payment with Paystack
     console.log('Contacting Paystack to verify transaction...');
@@ -84,8 +89,8 @@ export async function POST(request) {
           payment_status: 'failed', 
           metadata: paystackData 
         })
-        .in('id', paymentIds);
-      console.log(`Updated ${paymentIds.length} payment records to 'failed'.`);
+        .eq('id', paymentId);
+      console.log(`Updated payment record to 'failed'.`);
 
       return NextResponse.json(
         { 
@@ -107,24 +112,26 @@ export async function POST(request) {
       payment_method: paymentData.channel,
       metadata: {
         ...paymentData,
+        all_sub_course_ids: subCourseIds,
+        sub_course_count: subCourseIds.length,
         verified_at: new Date().toISOString()
       }
     };
-    console.log(`Attempting to update ${paymentIds.length} payment records to 'success':`, updatePayload);
+    console.log('Attempting to update payment record to success:', updatePayload);
 
     const { error: updatePaymentError } = await supabase
       .from('payments')
       .update(updatePayload)
-      .in('id', paymentIds);
+      .eq('id', paymentId);
 
     if (updatePaymentError) {
-      console.error(`DATABASE ERROR: Failed to update payment records to 'success'.`, updatePaymentError);
+      console.error('DATABASE ERROR: Failed to update payment record to success.', updatePaymentError);
       return NextResponse.json(
         { status: 'error', message: 'Failed to update payment record', details: updatePaymentError.message },
         { status: 500 }
       );
     }
-    console.log(`Successfully updated ${paymentIds.length} payment records to 'success'.`);
+    console.log('Successfully updated payment record to success.');
 
     // Get the payment record to get payment_id
     const { data: paymentRecord, error: paymentFetchError } = await supabase
@@ -205,7 +212,7 @@ export async function POST(request) {
           const { error: updateError } = await supabase
             .from('sub_course_enrollments')
             .update({ 
-              payment_id: paymentIds[index], 
+              payment_id: paymentId, 
               payment_status: 'paid' 
             })
             .eq('id', existingSubEnrollment.id);
@@ -225,7 +232,7 @@ export async function POST(request) {
               course_id: courseId,
               sub_course_id: subCourseId,
               status: 'not_started',
-              payment_id: paymentIds[index],
+              payment_id: paymentId,
               payment_status: 'paid'
             })
             .select('id')
@@ -252,7 +259,7 @@ export async function POST(request) {
           payment_status: 'enrollment_failed', 
           metadata: { ...paystackData, enrollment_error: enrollmentError.message }
         })
-        .in('id', paymentIds);
+        .eq('id', paymentId);
 
       return NextResponse.json(
         { 
@@ -268,8 +275,9 @@ export async function POST(request) {
       status: 'success', 
       message: 'Payment verified and enrollment successful', 
       data: { 
-        payment_records: paymentIds.length,
+        payment_id: paymentId,
         enrollment_created: true,
+        sub_courses_enrolled: subCourseIds.length,
         ...updatePayload 
       } 
     });

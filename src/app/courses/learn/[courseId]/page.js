@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect } from 'react';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import { FaArrowLeft, FaLock, FaCheck, FaPlay, FaBook, FaQuestionCircle, FaFile, FaChevronRight, FaChevronDown } from 'react-icons/fa';
@@ -349,6 +349,12 @@ export default function CourseLearnPage() {
     }
   };
 
+  const handleRetakeTest = () => {
+    setTestSubmitted(false);
+    setUserAnswers({});
+    setTestScore(0);
+  };
+
   const handleTabChange = (tab) => {
     setActiveTab(tab);
     if (tab === 'test') {
@@ -551,7 +557,52 @@ export default function CourseLearnPage() {
                           )}
                           
                           {activeTab === 'test' && showTestQuestions && (
-                             <div className="test-questions-container">{/* Test content here */}</div>
+                             <div className="test-questions-container">
+                            {!testSubmitted ? (
+                              <>
+                                <h4>Practice Test</h4>
+                                {testQuestions.map((q, index) => (
+                                  <div key={q.id} className="question-block">
+                                    <p><strong>Question {index + 1}:</strong> {q.question_text}</p>
+                                    <div className="options-group">
+                                      {q.options.map((option, i) => (
+                                        <label key={i} className="option-label">
+                                          <input
+                                            type="radio"
+                                            name={`question-${q.id}`}
+                                            value={option}
+                                            checked={userAnswers[q.id] === option}
+                                            onChange={() => handleAnswerSelect(q.id, option)}
+                                          />
+                                          <span className="custom-radio"></span>
+                                          <span className="option-text">{option}</span>
+                                        </label>
+                                      ))}
+                                    </div>
+                                  </div>
+                                ))}
+                                <button onClick={handleSubmitTest} className="submit-test-btn">Submit Test</button>
+                              </>
+                            ) : (
+                              <div className="test-results">
+                                <h4>Test Results</h4>
+                                <p>Your Score: <strong>{testScore}%</strong></p>
+                                {testScore < 70 && <p>You need at least 70% to pass.</p>}
+                                {testQuestions.map((q, index) => (
+                                  <div key={q.id} className="question-result">
+                                    <p><strong>Question {index + 1}:</strong> {q.question_text}</p>
+                                    <p className={userAnswers[q.id] === q.correct_answer ? 'correct' : 'incorrect'}>
+                                      Your answer: {userAnswers[q.id]}
+                                    </p>
+                                    {userAnswers[q.id] !== q.correct_answer && (
+                                      <p className="correct-answer">Correct answer: {q.correct_answer}</p>
+                                    )}
+                                  </div>
+                                ))}
+                                <button onClick={handleRetakeTest} className="retake-test-btn">Retake Test</button>
+                              </div>
+                            )}
+                          </div>
                           )}
                           
                           {activeTab === 'transcript' && showTranscript && transcript && (
