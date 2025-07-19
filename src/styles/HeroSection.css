@@ -64,8 +64,8 @@
 }
 
 .text-gold {
-  color: #D4A017;
-  background: linear-gradient(90deg, #D4A017, #F0C040);
+  color: linear-gradient(90deg, #ced417, #03c5fb);
+  background: linear-gradient(90deg, #ced417, #03c5fb);
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -95,7 +95,7 @@
 }
 
 .btn-primary {
-  background: linear-gradient(90deg, #D4A017, #F0C040);
+  background: linear-gradient(90deg, #ced417, #03fb38);
   color: #1A1A1A;
   box-shadow: 0 6px 20px rgba(212, 160, 23, 0.3);
 }

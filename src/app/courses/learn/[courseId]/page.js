@@ -4,11 +4,11 @@ import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
-import { FaArrowLeft, FaLock, FaCheck, FaPlay, FaBook, FaQuestionCircle, FaFile, FaChevronRight, FaChevronDown } from 'react-icons/fa';
+import { FaArrowLeft, FaLock, FaCheck, FaPlay, FaBook, FaQuestionCircle, FaFile, FaChevronRight, FaChevronDown, FaSpinner } from 'react-icons/fa';
 import '../../../../styles/CourseLearn.css';
 import LessonProgress from '../../../../components/LessonProgress';
 import SuccessModal from '../../../../components/SuccessModal';
-import PaymentEnrollment from '../../../../components/PaymentEnrollment';
+import PaystackIntegration from '../../../../components/PaystackIntegration';
 
 export default function CourseLearnPage() {
   const { courseId } = useParams();
@@ -34,6 +34,10 @@ export default function CourseLearnPage() {
   const [isEnrolling, setIsEnrolling] = useState(null); // Track which sub-course is being enrolled
   const [modalOpen, setModalOpen] = useState(false);
   const [modalContent, setModalContent] = useState({ title: '', message: '' });
+  const [showPayment, setShowPayment] = useState(false);
+  const [selectedSubCourses, setSelectedSubCourses] = useState([]);
+  const [totalPrice, setTotalPrice] = useState(0);
+  const [enrolling, setEnrolling] = useState(false);
   const router = useRouter();
   const supabase = createClientComponentClient();
 
@@ -152,6 +156,17 @@ export default function CourseLearnPage() {
     
     fetchData();
   }, [courseId, router, supabase]);
+
+  useEffect(() => {
+    const calculateTotal = () => {
+      const total = selectedSubCourses.reduce((acc, subCourseId) => {
+        const subCourse = subCourses.find(sc => sc.id === subCourseId);
+        return acc + (subCourse?.price || 0);
+      }, 0);
+      setTotalPrice(total);
+    };
+    if (subCourses.length > 0) calculateTotal();
+  }, [selectedSubCourses, subCourses]);
 
   useEffect(() => {
     // Update active lesson when activeLessonId changes
@@ -369,6 +384,32 @@ export default function CourseLearnPage() {
     }
   };
 
+  const handlePaymentSuccess = (reference, paymentData) => {
+    console.log('Payment successful on learn page:', reference, paymentData);
+    setEnrolledSubCourses(prev => [...new Set([...prev, ...selectedSubCourses])]);
+    setSelectedSubCourses([]);
+    setShowPayment(false);
+    setModalContent({
+      title: 'Enrollment Successful!',
+      message: 'You can now access all the lessons in the selected modules.',
+    });
+    setModalOpen(true);
+  };
+
+  const handlePaymentError = (errorMessage) => {
+    setError(errorMessage);
+    setShowPayment(false);
+  };
+
+  const toggleSubCourseSelection = (subCourseId) => {
+    if (enrolledSubCourses.includes(subCourseId)) return;
+    setSelectedSubCourses(prev => 
+      prev.includes(subCourseId) 
+        ? prev.filter(id => id !== subCourseId) 
+        : [...prev, subCourseId]
+    );
+  };
+
   const handleEnrollmentSuccess = (subCourseId) => {
     setEnrolledSubCourses(prev => [...prev, subCourseId]);
     // The activeSubCourse is already set, so the view will update automatically
@@ -378,6 +419,43 @@ export default function CourseLearnPage() {
       message: 'You can now access all the lessons in this module.',
     });
     setModalOpen(true);
+  };
+
+  const handleEnrollment = async () => {
+    if (totalPrice > 0) {
+      setShowPayment(true);
+      return;
+    }
+    if (selectedSubCourses.length === 0) {
+      setError('Please select at least one module to enroll.');
+      return;
+    }
+    setEnrolling(true);
+    setError(null);
+    try {
+      const { data: rpcResult, error: rpcError } = await supabase.rpc('create_enrollment_and_sub_enrollments', {
+        p_user_id: user.id,
+        p_course_id: courseId,
+        p_sub_course_ids: selectedSubCourses
+      });
+
+      if (rpcError || (rpcResult && !rpcResult.success)) {
+        throw new Error(rpcError?.message || rpcResult?.error || 'Failed to enroll.');
+      }
+
+      setEnrolledSubCourses(prev => [...new Set([...prev, ...selectedSubCourses])]);
+      setSelectedSubCourses([]);
+      setModalContent({
+        title: 'Enrollment Successful!',
+        message: 'Your new modules are now available.',
+      });
+      setModalOpen(true);
+    } catch (err) {
+      console.error('Error during free enrollment:', err);
+      setError(err.message);
+    } finally {
+      setEnrolling(false);
+    }
   };
 
   if (loading) {
@@ -622,14 +700,55 @@ export default function CourseLearnPage() {
                   )}
                 </div>
               ) : (
-                // USER IS NOT ENROLLED - SHOW PAYMENT/ENROLLMENT FORM
-                <div className="payment-enrollment-container">
-                  <PaymentEnrollment 
-                    subCourse={activeSubCourse}
-                    course={course}
-                    user={user}
-                    onEnrollmentSuccess={() => handleEnrollmentSuccess(activeSubCourse.id)}
-                  />
+                // USER IS NOT ENROLLED - SHOW ENROLLMENT SELECTION
+                <div className="sub-courses-section">
+                  <h3>Course Content</h3>
+                  <p>Select the modules you want to enroll in:</p>
+                  <div className="enrollment-info-box">
+                    <p><strong>Note:</strong> You can enroll in specific modules now or all at once.</p>
+                  </div>
+                  <div className="sub-courses-list">
+                    {subCourses.map((subCourse) => {
+                      const isEnrolled = enrolledSubCourses.includes(subCourse.id);
+                      const isSelected = selectedSubCourses.includes(subCourse.id);
+                      const isFree = !subCourse.price || subCourse.price === 0;
+                      return (
+                        <div key={subCourse.id} className={`sub-course-item ${isSelected ? 'selected' : ''} ${isEnrolled ? 'enrolled' : ''}`} onClick={() => toggleSubCourseSelection(subCourse.id)}>
+                          <div className="checkbox">
+                            {isSelected && !isEnrolled && <FaCheck />}
+                            {isEnrolled && <span className="enrolled-badge">Enrolled</span>}
+                          </div>
+                          <div className="sub-course-info">
+                            <h4>{subCourse.title}</h4>
+                            <p>{subCourse.description}</p>
+                          </div>
+                          <div className="sub-course-price">
+                            {isFree ? 'Free' : `₦${subCourse.price}`}
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+                  {showPayment ? (
+                    <PaystackIntegration
+                      courseId={courseId}
+                      subCourseIds={selectedSubCourses}
+                      amount={totalPrice}
+                      userEmail={user?.email}
+                      onPaymentSuccess={handlePaymentSuccess}
+                      onPaymentError={handlePaymentError}
+                    />
+                  ) : (
+                    <div className="enrollment-summary">
+                      <div className="total-price">
+                        <h3>Total</h3>
+                        <p>₦{totalPrice.toLocaleString()}</p>
+                      </div>
+                      <button className="enroll-button" onClick={handleEnrollment} disabled={enrolling || selectedSubCourses.length === 0}>
+                        {enrolling ? (<><FaSpinner className="spinner-icon" /> Processing...</>) : (totalPrice > 0 ? `Pay ₦${totalPrice.toLocaleString()}` : 'Enroll for Free')}
+                      </button>
+                    </div>
+                  )}
                 </div>
               )
             ) : (

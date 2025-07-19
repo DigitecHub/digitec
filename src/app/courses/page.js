@@ -17,10 +17,14 @@ export default function CoursesPage() {
   useEffect(() => {
     async function fetchData() {
       try {
-        // Get current user
+        // Get current user (if authenticated)
         const { data: { user }, error: userError } = await supabase.auth.getUser();
-        if (userError) throw userError;
-        setUser(user);
+        // Only set user if successfully authenticated, otherwise leave as null for public access
+        if (!userError && user) {
+          setUser(user);
+        } else {
+          setUser(null);
+        }
         
         // Get all courses with pricing info
         const { data: coursesData, error: coursesError } = await supabase
