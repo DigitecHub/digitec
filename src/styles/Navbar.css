@@ -24,9 +24,9 @@
   left: 0;
   width: 100%;
   z-index: 1000;
-  padding: 0;
+  padding: 10px 0px;
   height: var(--navbar-height);
-  background: linear-gradient(135deg, var(--primary-gold) 0%, var(--light-gold) 100%);
+  background: linear-gradient(135deg, var(--primary-gold) 0%, #ecac0c 100%);
   backdrop-filter: blur(10px);
   box-shadow: var(--shadow);
   border-bottom: 2px solid var(--dark-gold);
@@ -38,7 +38,7 @@
 .navbar-header.scrolled {
   /* Keep same styling - no changes on scroll */
   height: var(--navbar-height);
-  background: linear-gradient(135deg, var(--primary-gold) 0%, var(--light-gold) 100%);
+  background: linear-gradient(135deg, var(--primary-gold) 0%, #ecac0c 100%);
   box-shadow: var(--shadow);
 }
 

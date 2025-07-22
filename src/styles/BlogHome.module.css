@@ -1,0 +1,483 @@
+.blogHomeContainer {
+  min-height: 100vh;
+  background: #f7f8fa;
+  padding: 0 0 64px 0;
+}
+
+.blogHeader {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 48px 0 0 0;
+  text-align: center;
+  margin-bottom: 48px;
+}
+.blogHeader h1 {
+  font-size: 48px;
+  font-weight: 900;
+  letter-spacing: -2px;
+  color: #18181b;
+  margin-bottom: 8px;
+  line-height: 1.1;
+}
+.blogHeader .subtitle {
+  color: #b89c0a;
+  font-size: 22px;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+.blogHeader p {
+  color: #555;
+  font-size: 20px;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.blogForm {
+  margin: 0 auto 56px auto;
+  width: 100%;
+  max-width: 600px;
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 4px 32px rgba(0,0,0,0.08);
+  padding: 40px;
+}
+.blogForm h2 {
+  margin-bottom: 16px;
+  font-weight: 800;
+  font-size: 28px;
+  color: #18181b;
+}
+.blogForm input,
+.blogForm textarea {
+  width: 100%;
+  margin-bottom: 12px;
+  padding: 14px;
+  border-radius: 8px;
+  border: 1px solid #eee;
+  font-size: 16px;
+  font-family: inherit;
+}
+.blogForm input[name="title"] {
+  font-size: 18px;
+  font-weight: 600;
+}
+.blogForm label {
+  font-weight: 600;
+  font-size: 16px;
+}
+.blogForm .fileInput {
+  margin-left: 8px;
+}
+.blogForm .uploading {
+  margin-left: 12px;
+  color: #b89c0a;
+  font-weight: 600;
+}
+.blogForm button {
+  background: linear-gradient(90deg,#b89c0a 0%,#ffc107 100%);
+  color: #18181b;
+  font-weight: 800;
+  border: none;
+  border-radius: 10px;
+  padding: 16px 0;
+  width: 100%;
+  font-size: 20px;
+  margin-top: 8px;
+  cursor: pointer;
+  box-shadow: 0 2px 12px rgba(255,193,7,0.10);
+  transition: background 0.2s;
+}
+.blogForm .error {
+  color: #dc3545;
+  margin-top: 16px;
+  font-weight: 600;
+}
+.blogForm .success {
+  color: #28a745;
+  margin-top: 16px;
+  font-weight: 600;
+}
+
+.blogGrid {
+  width: 100%;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 40px;
+}
+.container{
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+.blogCard {
+  background: #fff;
+  border-radius: 18px;
+  box-shadow: 0 4px 32px rgba(0,0,0,0.08);
+  overflow: hidden;
+  transition: box-shadow 0.2s, transform 0.2s;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  border: 1.5px solid #f3e9c7;
+  width: 100%;
+}
+.blogCard:hover {
+  box-shadow: 0 8px 40px rgba(184,156,10,0.13), 0 4px 32px rgba(0,0,0,0.10);
+  transform: translateY(-4px) scale(1.01);
+}
+.blogImageWrapper {
+  width: 100%;
+  aspect-ratio: 16/9;
+  height: 0;
+  position: relative;
+  background: #f7f7f7;
+}
+.blogImage {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 180px;
+  object-fit: cover;
+  border-top-left-radius: 18px;
+  border-top-right-radius: 18px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+}
+.blogCardContent {
+  padding: 28px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding-top: 200px;
+}
+.blogCardTitle {
+  font-size: 28px;
+  font-weight: 900;
+  margin: 0 0 12px 0;
+  color: #18181b;
+  line-height: 1.15;
+}
+.blogCardMeta {
+  color: #b89c0a;
+  font-size: 15px;
+  margin-bottom: 10px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+.blogCardExcerpt {
+  color: #555;
+  font-size: 18px;
+  margin-bottom: 18px;
+  font-weight: 500;
+}
+.blogCardTags {
+  margin-top: auto;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.blogTag {
+  background: rgba(255,193,7,0.13);
+  color: #b89c0a;
+  border-radius: 50px;
+  padding: 4px 18px;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
+.loading {
+  font-size: 20px;
+  color: #b89c0a;
+  font-weight: 700;
+  text-align: center;
+}
+.error {
+  color: #888;
+  font-size: 22px;
+  margin-top: 32px;
+  font-weight: 700;
+  text-align: center;
+}
+
+@media (max-width: 991px) {
+  .blogHeader h1 { font-size: 32px; }
+  .blogCardTitle { font-size: 20px; }
+  .blogImage { height: 160px; }
+  .blogCardContent { padding: 14px; }
+}
+@media (max-width: 767px) {
+  .blogHeader { padding-top: 16px; }
+  .blogHeader h1 { font-size: 22px; }
+  .blogHeader p { font-size: 14px; }
+  .blogForm { padding: 10px; }
+  .blogCardContent { padding: 8px; }
+  .blogCardTitle { font-size: 15px; }
+  .blogImage { height: 80px; }
+  .blogGrid {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+  .blogCard {
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+  }
+  .blogCardContent {
+    padding: 10px 8px;
+  }
+  .blogCardTitle {
+    font-size: 15px;
+    margin-bottom: 4px;
+    line-height: 1.2;
+    word-break: break-word;
+  }
+  .blogCardMeta {
+    font-size: 11px;
+    margin-bottom: 4px;
+  }
+  .blogCardExcerpt {
+    font-size: 12px;
+    margin-bottom: 6px;
+  }
+  .blogCardTags {
+    gap: 4px;
+  }
+  .blogTag {
+    font-size: 10px;
+    padding: 2px 8px;
+  }
+  .blogImageWrapper {
+    position: relative;
+    height: auto;
+    aspect-ratio: unset;
+  }
+  .blogImage {
+    position: static;
+    display: block;
+    width: 100%;
+    height: 80px;
+    object-fit: cover;
+    border-top-left-radius: 12px;
+    border-top-right-radius: 12px;
+  }
+}
+@media (max-width: 575px) {
+  .blogGrid { grid-template-columns: 1fr; gap: 10px; }
+  .blogHeader { margin-bottom: 12px; }
+  .blogForm { padding: 4px; }
+  .blogCardContent { padding: 6px; }
+  .blogCardTitle { font-size: 13px; }
+  .blogImage { height: 60px; }
+}
+
+.fab {
+  position: fixed;
+  bottom: 32px;
+  right: 32px;
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #fffbe6 0%, #ffc107 100%);
+  color: #b89c0a;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 38px;
+  font-weight: 900;
+  box-shadow: 0 8px 32px 0 rgba(255,193,7,0.25), 0 2px 8px rgba(0,0,0,0.10);
+  cursor: pointer;
+  z-index: 2000;
+  border: none;
+  outline: none;
+  transition: background 0.2s, transform 0.2s, box-shadow 0.2s;
+  animation: fabPopIn 0.4s cubic-bezier(.4,2,.6,1) 1;
+}
+.fab:hover, .fab:focus {
+  background: linear-gradient(135deg, #ffc107 0%, #fffbe6 100%);
+  transform: scale(1.09);
+  box-shadow: 0 12px 40px 0 rgba(255,193,7,0.35), 0 4px 16px rgba(0,0,0,0.13);
+}
+@keyframes fabPopIn {
+  from { opacity: 0; transform: scale(0.7); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.modalOverlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(24,24,27,0.25);
+  z-index: 3000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: fadeInModal 0.25s;
+  backdrop-filter: blur(6px) saturate(1.2);
+}
+@keyframes fadeInModal {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.modalContainer {
+  background: rgba(255,255,255,0.85);
+  border-radius: 22px;
+  box-shadow: 0 16px 64px 0 rgba(255,193,7,0.18), 0 4px 32px rgba(0,0,0,0.13);
+  padding: 44px 28px 32px 28px;
+  max-width: 95vw;
+  width: 100%;
+  max-width: 420px;
+  position: relative;
+  animation: popInModal 0.28s cubic-bezier(.4,2,.6,1);
+  border: 1.5px solid #ffe082;
+  backdrop-filter: blur(12px) saturate(1.3);
+  min-height: 340px;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.modalContainer form {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  max-height: calc(80vh - 80px);
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+}
+.modalContainer form button[type="submit"] {
+  margin-top: 8px;
+  flex-shrink: 0;
+}
+@keyframes popInModal {
+  from { transform: scale(0.92); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+.modalClose {
+  position: absolute;
+  top: 14px;
+  right: 18px;
+  font-size: 28px;
+  color: #b89c0a;
+  background: rgba(255,255,255,0.7);
+  border: none;
+  border-radius: 50%;
+  width: 38px;
+  height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-weight: 900;
+  z-index: 10;
+  box-shadow: 0 2px 8px rgba(255,193,7,0.10);
+  transition: color 0.2s, background 0.2s, box-shadow 0.2s;
+}
+.modalClose:hover, .modalClose:focus {
+  color: #dc3545;
+  background: #fffbe6;
+  box-shadow: 0 4px 16px rgba(255,193,7,0.18);
+}
+
+.modalContainer h2 {
+  font-size: 26px;
+  font-weight: 900;
+  color: #18181b;
+  margin-bottom: 18px;
+  text-align: center;
+  letter-spacing: -1px;
+}
+.modalContainer form input,
+.modalContainer form textarea {
+  width: 100%;
+  margin-bottom: 14px;
+  padding: 14px 14px;
+  border-radius: 10px;
+  border: 1.5px solid #ffe082;
+  font-size: 16px;
+  font-family: inherit;
+  background: rgba(255,255,255,0.85);
+  transition: border 0.2s, box-shadow 0.2s;
+  box-shadow: 0 1px 4px rgba(255,193,7,0.04);
+}
+.modalContainer form input:focus,
+.modalContainer form textarea:focus {
+  border: 1.5px solid #b89c0a;
+  outline: none;
+  box-shadow: 0 2px 12px rgba(255,193,7,0.13);
+}
+.modalContainer form label {
+  font-weight: 700;
+  font-size: 15px;
+  color: #b89c0a;
+}
+.modalContainer form button[type="submit"] {
+  background: linear-gradient(90deg,#b89c0a 0%,#ffc107 100%);
+  color: #18181b;
+  font-weight: 900;
+  border: none;
+  border-radius: 10px;
+  padding: 16px 0;
+  width: 100%;
+  font-size: 20px;
+  margin-top: 8px;
+  cursor: pointer;
+  box-shadow: 0 2px 12px rgba(255,193,7,0.10);
+  transition: background 0.2s, box-shadow 0.2s, transform 0.2s;
+}
+.modalContainer form button[type="submit"]:hover,
+.modalContainer form button[type="submit"]:focus {
+  background: linear-gradient(90deg,#ffc107 0%,#b89c0a 100%);
+  box-shadow: 0 4px 24px rgba(255,193,7,0.18);
+  transform: scale(1.03);
+}
+.modalContainer .error {
+  color: #dc3545;
+  margin-top: 12px;
+  font-weight: 600;
+  text-align: center;
+}
+.modalContainer .success {
+  color: #28a745;
+  margin-top: 12px;
+  font-weight: 600;
+  text-align: center;
+}
+
+@media (max-width: 575px) {
+  .fab {
+    bottom: 16px;
+    right: 16px;
+    width: 48px;
+    height: 48px;
+    font-size: 28px;
+  }
+  .modalContainer {
+    padding: 18px 6px 12px 6px;
+    max-width: 98vw;
+    border-radius: 14px;
+    min-height: 220px;
+    max-height: 92vh;
+  }
+  .modalContainer form {
+    max-height: calc(92vh - 40px);
+  }
+  .modalClose {
+    top: 6px;
+    right: 8px;
+    width: 28px;
+    height: 28px;
+    font-size: 18px;
+  }
+  .modalContainer h2 {
+    font-size: 18px;
+  }
+  .modalContainer form button[type="submit"] {
+    font-size: 15px;
+    padding: 10px 0;
+  }
+} 

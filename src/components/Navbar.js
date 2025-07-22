@@ -4,7 +4,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
-import { FaHome, FaInfoCircle, FaBook, FaEnvelope, FaUser, FaSignOutAlt, FaSignInAlt, FaChartLine, FaGraduationCap, FaBars, FaTimes } from 'react-icons/fa';
+import { FaHome, FaInfoCircle, FaBook, FaEnvelope, FaUser, FaSignOutAlt, FaSignInAlt, FaChartLine, FaGraduationCap, FaBars, FaTimes, FaBlog } from 'react-icons/fa';
 import AOS from 'aos';
 import 'aos/dist/aos.css';
 import '../styles/Navbar.css';
@@ -113,7 +113,7 @@ const Navbar = () => {
     { title: 'Home', path: '/', icon: <FaHome /> },
     { title: 'About', path: '/about', icon: <FaInfoCircle /> },
     { title: 'Courses', path: '/courses', icon: <FaBook /> },
-    { title: 'Contact', path: '/contact', icon: <FaEnvelope /> },
+    { title: 'Blogs', path: '/blog', icon: <FaBlog /> },
   ];
 
   const closeDropdownOnOutsideClick = (e) => {
