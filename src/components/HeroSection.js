@@ -62,7 +62,7 @@ const HeroSection = () => {
             <div className="hero-content">
               <span className="hero-badge">Transform Your Future</span>
               <h1 className="hero-title">
-                Master Your <span className="text-gold">Tech Career</span> with <span className="text-gold">Elite </span>Training
+                Master Your <span className="text-gold">Tech Career</span> with Elite Training
               </h1>
               <p className="hero-description">
                 Unlock your potential with cutting-edge IT courses, globally recognized certifications, and hands-on training designed to propel you to the top of the tech industry.
